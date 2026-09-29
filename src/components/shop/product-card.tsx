@@ -1,17 +1,18 @@
 import Image from "next/image"
+import Link from "next/link"
 import { Product } from "@prisma/client"
-import {Card, CardContent, CardFooter, CardHeader} from "@/components/ui/card";
-import {Badge} from "@/components/ui/badge";
-import Link from "next/link";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
-interface ProductCard {
+interface ProductCardProps {
     product: Product
 }
-export function ProductCard({product}: ProductCard) {
+
+export function ProductCard({ product }: ProductCardProps) {
     return (
         <Card className="group overflow-hidden rounded-none border-border/50 bg-background transition-all duration-300 hover:border-foreground/20">
             <CardHeader className="p-0">
-                <div className="relative aspect-4/5 w-full overflow-hidden bg-muted">
+                <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted">
                     <Image
                         src={product.images[0]}
                         alt={product.name}
@@ -43,7 +44,7 @@ export function ProductCard({product}: ProductCard) {
                 </div>
             </CardContent>
 
-            <CardFooter className="px-4 pb-4 flex justify-between text-xs text-muted-foreground border-t border-border/30 pt-3 mt-2">
+            <CardFooter className="px-4 pb-4 pt-0 flex justify-between text-xs text-muted-foreground border-t border-border/30 pt-3 mt-2">
                 <span>{product.weight}</span>
                 <span>{product.width}</span>
             </CardFooter>
