@@ -1,8 +1,8 @@
 import Image from "next/image"
 import Link from "next/link"
 import { Product } from "@prisma/client"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { ArrowUpRight } from "lucide-react"
 
 interface ProductCardProps {
     product: Product
@@ -10,44 +10,66 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
     return (
-        <Card className="group overflow-hidden rounded-none border-border/50 bg-background transition-all duration-300 hover:border-foreground/20">
-            <CardHeader className="p-0">
-                <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted">
-                    <Image
-                        src={product.images[0]}
-                        alt={product.name}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    {product.isFeatured && (
-                        <Badge className="absolute top-3 left-3 bg-background/80 text-foreground backdrop-blur-md hover:bg-background rounded-none font-mono text-[10px] tracking-widest uppercase">
+        <div className="group relative flex flex-col overflow-hidden border border-border bg-card transition-all duration-300 hover:border-foreground/40">
+            {/* Fixed Height Image Container */}
+            <div className="relative w-full h-80 overflow-hidden bg-muted">
+                <Image
+                    src={product.images[0]}
+                    alt={product.name}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                />
+
+                {/* Top Badges */}
+                <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
+                    {product.isFeatured ? (
+                        <Badge className="bg-background/90 text-foreground backdrop-blur-sm rounded-none px-2 py-0.5 text-[10px] font-mono tracking-widest uppercase border-none">
                             Featured
                         </Badge>
+                    ) : (
+                        <div />
                     )}
-                </div>
-            </CardHeader>
 
-            <CardContent className="p-4">
-                <div className="flex justify-between items-start gap-2">
-                    <div>
-                        <p className="text-xs text-muted-foreground tracking-wider uppercase font-medium">
-                            {product.material}
-                        </p>
-                        <h3 className="font-medium text-base tracking-tight mt-1 group-hover:underline underline-offset-4">
-                            <Link href={`/shop/${product.slug}`}>{product.name}</Link>
-                        </h3>
-                    </div>
-                    <p className="font-semibold text-sm">
-                        ${product.price.toFixed(2)} <span className="text-xs text-muted-foreground font-normal">/m</span>
+                    <span className="bg-background/80 text-foreground/80 backdrop-blur-sm text-[10px] font-medium px-2 py-0.5 rounded-none border border-border/40">
+            {product.stock > 0 ? "In Stock" : "Out of Stock"}
+          </span>
+                </div>
+            </div>
+
+            {/* Card Details */}
+            <div className="flex flex-1 flex-col justify-between p-5 space-y-4">
+                <div>
+                    <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground mb-1">
+                        {product.material}
                     </p>
+                    <h3 className="font-medium text-base tracking-tight text-foreground group-hover:underline underline-offset-4 flex items-center justify-between">
+                        <Link href={`/shop/${product.slug}`}>{product.name}</Link>
+                        <ArrowUpRight className="w-4 h-4 text-muted-foreground" />
+                    </h3>
                 </div>
-            </CardContent>
 
-            <CardFooter className="px-4 pb-4 pt-0 flex justify-between text-xs text-muted-foreground border-t border-border/30 pt-3 mt-2">
-                <span>{product.weight}</span>
-                <span>{product.width}</span>
-            </CardFooter>
-        </Card>
+                {/* Specs */}
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground border-t border-border/50 pt-3">
+          <span className="bg-muted px-2 py-0.5 rounded-none font-mono text-[10px]">
+            {product.weight}
+          </span>
+                    <span>•</span>
+                    <span className="bg-muted px-2 py-0.5 rounded-none font-mono text-[10px]">
+            {product.width}
+          </span>
+                </div>
+
+                {/* Pricing */}
+                <div className="flex items-baseline justify-between border-t border-border/50 pt-3">
+          <span className="text-xs uppercase text-muted-foreground tracking-wider">
+            Price / Meter
+          </span>
+                    <span className="text-lg font-semibold tracking-tight text-foreground">
+            ${product.price.toFixed(2)}
+          </span>
+                </div>
+            </div>
+        </div>
     )
 }
