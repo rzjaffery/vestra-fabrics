@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Oxanium, Geist } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/global/theme-provider";
+import { cn } from "@/lib/utils";
+import {Navbar} from "@/components/global/navbar";
+
+const geistHeading = Geist({subsets:['latin'],variable:'--font-heading'});
+
+const oxanium = Oxanium({subsets:['latin'],variable:'--font-sans'});
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-      <html lang="en" suppressHydrationWarning>
+      <html lang="en" suppressHydrationWarning className={cn("font-sans", oxanium.variable, geistHeading.variable)}>
       <body className={inter.className}>
       <ThemeProvider
           attribute="class"
@@ -24,6 +30,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
       >
+          <Navbar/>
         {children}
       </ThemeProvider>
       </body>
