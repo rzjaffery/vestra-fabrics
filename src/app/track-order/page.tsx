@@ -1,171 +1,236 @@
-'use client'
+"use client"
 
-import {useState} from "react";
-import {formatPrice} from "@/lib/format-price";
-import {Button} from "@/components/ui/button";
-import {AlertCircle, CheckCircle2, Clock, Loader2, Package, Search, Truck} from "lucide-react";
-import Image from "next/image";
+import { useState } from "react"
+import { formatPrice } from "@/lib/format-price"
+import { Button } from "@/components/ui/button"
+import {
+    Search,
+    Package,
+    Truck,
+    CheckCircle2,
+    Clock,
+    MapPin,
+    AlertCircle,
+    Loader2,
+} from "lucide-react"
+import {Input} from "@base-ui/react";
 
-export default function TrackOrderPage(){
+const STAGES = [
+    { id: "PENDING", label: "Order Placed", icon: Clock },
+    { id: "PROCESSING", label: "Processing & Cutting", icon: Package },
+    { id: "SHIPPED", label: "Dispatched / Shipped", icon: Truck },
+    { id: "DELIVERED", label: "Delivered", icon: CheckCircle2 },
+]
+
+export default function TrackOrderPage() {
     const [orderNumber, setOrderNumber] = useState("")
+    const [loading, setLoading] = useState(false)
     const [order, setOrder] = useState<any>(null)
-    const [error, setError] = useState("")
-    const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
 
-    const handleSearch = async (e: React.FormEvent) => {
+    const handleTrack = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!orderNumber.trim()) return
 
-        setIsLoading(true)
-        setError("")
+        setLoading(true)
+        setError(null)
         setOrder(null)
 
         try {
-            const response = await fetch(`/api/track?orderNumber=${encodeURIComponent(orderNumber)}`)
-            const data = await response.json()
+            const res = await fetch(
+                `/api/orders/track?orderNumber=${encodeURIComponent(orderNumber.trim())}`
+            )
+            const data = await res.json()
 
-            if (response.ok && data.order) {
+            if (res.ok) {
                 setOrder(data.order)
             } else {
-                setError(data.error || "Order not found. Check your order number and try again.")
+                setError(data.error || "Could not find order.")
             }
         } catch (err) {
-            setError("An error occurred while tracking your order.")
+            setError("An unexpected error occurred. Please try again.")
         } finally {
-            setIsLoading(false)
+            setLoading(false)
         }
     }
 
-    const getStatusStep = (status: string) => {
+    const getStageIndex = (status: string) => {
         switch (status) {
             case "PENDING":
-                return 1
+                return 0
             case "PROCESSING":
-                return 2
-            case "SHIPPED":
-                return 3
-            case "DELIVERED":
-                return 4
-            default:
                 return 1
+            case "SHIPPED":
+                return 2
+            case "DELIVERED":
+                return 3
+            default:
+                return 0
         }
     }
+
     return (
-        <div className="container mx-auto px-4 py-16 max-w-3xl">
-            <div className="text-center space-y-2 mb-10">
+        <div className="max-w-3xl mx-auto px-4 py-12 space-y-10">
+            {/* Page Title */}
+            <div className="text-center space-y-2">
         <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-          Customer Service
+          Vestra Fabrics Logistics
         </span>
-                <h1 className="text-3xl md:text-4xl font-light tracking-tight">
-                    Track Your Fabric Order
+                <h1 className="text-3xl font-light tracking-tight text-foreground">
+                    Track Your Order
                 </h1>
-                <p className="text-muted-foreground text-xs md:text-sm">
-                    Enter your order number (e.g. VES-123456) received in your confirmation screen.
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                    Enter your reference number (e.g. <span className="font-mono font-semibold">VES-408950</span>) to check fulfillment status.
                 </p>
             </div>
 
             {/* Search Input Box */}
-            <form onSubmit={handleSearch} className="flex gap-2 max-w-md mx-auto mb-10">
-                <input
+            <form onSubmit={handleTrack} className="flex gap-2 max-w-md mx-auto">
+                <Input
                     type="text"
+                    placeholder="e.g. VES-408950"
                     value={orderNumber}
                     onChange={(e) => setOrderNumber(e.target.value)}
-                    placeholder="Enter Order # (e.g. VES-849201)"
-                    className="flex-1 border border-border p-3 text-sm font-mono uppercase bg-background focus:outline-none focus:border-foreground"
-                    required
+                    className="rounded-none font-mono uppercase text-sm border-border focus-visible:ring-foreground"
                 />
                 <Button
                     type="submit"
-                    disabled={isLoading}
-                    className="rounded-none px-6 uppercase text-xs tracking-widest bg-foreground text-background"
+                    disabled={loading || !orderNumber.trim()}
+                    className="rounded-none px-6 font-mono text-xs uppercase"
                 >
-                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                    {loading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                        <>
+                            <Search className="h-4 w-4 mr-2" /> Track
+                        </>
+                    )}
                 </Button>
             </form>
 
             {/* Error Message */}
             {error && (
-                <div className="border border-destructive/50 bg-destructive/10 text-destructive p-4 text-xs flex items-center gap-2 max-w-md mx-auto mb-8">
-                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <div className="border border-destructive/30 bg-destructive/10 p-4 text-xs font-mono text-destructive flex items-center gap-2 max-w-md mx-auto">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
                     <span>{error}</span>
                 </div>
             )}
 
-            {/* Order Details Display */}
+            {/* Order Status Display Card */}
             {order && (
-                <div className="border border-border bg-card p-6 md:p-8 space-y-8">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 gap-2">
+                <div className="border border-border bg-card space-y-8 p-6 md:p-8 animate-in fade-in duration-300">
+                    {/* Header Info */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border pb-6 gap-4 font-mono text-xs">
                         <div>
-                            <span className="text-xs font-mono text-muted-foreground uppercase">Order Number</span>
-                            <h3 className="text-xl font-mono font-bold">{order.orderNumber}</h3>
+                            <p className="text-muted-foreground">Order Reference</p>
+                            <p className="text-lg font-bold text-foreground">{order.orderNumber}</p>
                         </div>
-                        <div className="text-left sm:text-right">
-                            <span className="text-xs text-muted-foreground block">Placed On</span>
-                            <span className="text-xs font-medium">{new Date(order.createdAt).toLocaleDateString()}</span>
+                        <div className="sm:text-right">
+                            <p className="text-muted-foreground">Placed On</p>
+                            <p className="text-foreground">
+                                {new Date(order.createdAt).toLocaleDateString("en-US", {
+                                    day: "numeric",
+                                    month: "long",
+                                    year: "numeric",
+                                })}
+                            </p>
                         </div>
                     </div>
 
-                    {/* Status Tracker Steps */}
-                    <div className="grid grid-cols-4 gap-2 py-4 border-b">
-                        {[
-                            { label: "Pending", icon: Clock, step: 1 },
-                            { label: "Processing", icon: Package, step: 2 },
-                            { label: "Shipped", icon: Truck, step: 3 },
-                            { label: "Delivered", icon: CheckCircle2, step: 4 },
-                        ].map(({ label, icon: Icon, step }) => {
-                            const currentStep = getStatusStep(order.status)
-                            const isActive = currentStep >= step
-                            return (
-                                <div key={label} className="flex flex-col items-center text-center space-y-2">
-                                    <div
-                                        className={`h-10 w-10 rounded-full flex items-center justify-center border transition-colors ${
-                                            isActive
-                                                ? "bg-foreground text-background border-foreground"
-                                                : "border-border text-muted-foreground"
-                                        }`}
-                                    >
-                                        <Icon className="h-4 w-4" />
-                                    </div>
-                                    <span className={`text-[11px] font-medium ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
-                    {label}
-                  </span>
-                                </div>
-                            )
-                        })}
+                    {/* Cancelled Alert or Progress Tracker */}
+                    {order.status === "CANCELLED" ? (
+                        <div className="p-4 border border-destructive/20 bg-destructive/5 text-destructive font-mono text-xs text-center">
+                            This order has been cancelled. Please contact customer support for assistance.
+                        </div>
+                    ) : (
+                        <div className="space-y-6">
+                            <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                                Fulfillment Timeline
+                            </p>
+
+                            {/* Progress Steps */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {STAGES.map((stage, idx) => {
+                                    const currentIdx = getStageIndex(order.status)
+                                    const isCompleted = idx <= currentIdx
+                                    const isCurrent = idx === currentIdx
+                                    const Icon = stage.icon
+
+                                    return (
+                                        <div
+                                            key={stage.id}
+                                            className={`border p-4 text-center space-y-2 transition-colors ${
+                                                isCurrent
+                                                    ? "border-foreground bg-foreground/5"
+                                                    : isCompleted
+                                                        ? "border-emerald-500/30 bg-emerald-500/5"
+                                                        : "border-border opacity-50"
+                                            }`}
+                                        >
+                                            <div className="flex justify-center">
+                                                <Icon
+                                                    className={`h-5 w-5 ${
+                                                        isCompleted ? "text-emerald-600" : "text-muted-foreground"
+                                                    }`}
+                                                />
+                                            </div>
+                                            <p className="font-mono text-[11px] font-semibold uppercase text-foreground">
+                                                {stage.label}
+                                            </p>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Delivery Details */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border text-xs">
+                        <div className="space-y-2 font-mono">
+                            <p className="uppercase text-muted-foreground font-semibold flex items-center gap-1">
+                                <MapPin className="h-3.5 w-3.5" /> Shipping Address
+                            </p>
+                            <p className="font-semibold text-foreground">{order.customerName}</p>
+                            <p className="text-muted-foreground">{order.address}</p>
+                            <p className="text-muted-foreground">{order.city}, Pakistan {order.postalCode}</p>
+                        </div>
+
+                        <div className="space-y-2 font-mono sm:text-right">
+                            <p className="uppercase text-muted-foreground font-semibold">Payment Summary</p>
+                            <p className="text-muted-foreground">
+                                Method: <strong className="text-foreground">{order.paymentMethod}</strong>
+                            </p>
+                            <p className="text-muted-foreground">
+                                Status: <strong className="text-foreground">{order.paymentStatus}</strong>
+                            </p>
+                            <p className="text-base font-bold text-foreground mt-2">
+                                Total: {formatPrice(order.totalAmount)}
+                            </p>
+                        </div>
                     </div>
 
-                    {/* Items Summary */}
-                    <div className="space-y-4">
-                        <h4 className="text-xs font-mono uppercase tracking-wider text-muted-foreground">Order Items</h4>
-                        <div className="divide-y divide-border">
+                    {/* Ordered Fabric Items */}
+                    <div className="border-t border-border pt-6 space-y-4">
+                        <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                            Ordered Items
+                        </p>
+                        <div className="divide-y divide-border border border-border">
                             {order.items.map((item: any) => (
-                                <div key={item.id} className="flex items-center gap-4 py-3">
-                                    <div className="relative h-14 w-14 bg-muted border overflow-hidden flex-shrink-0">
-                                        <Image src={item.product.images[0]} alt={item.product.name} fill className="object-cover" />
+                                <div key={item.id} className="p-4 flex items-center justify-between text-xs font-mono">
+                                    <div>
+                                        <p className="font-semibold text-foreground">
+                                            {item.product?.name || "Fabric Roll"}
+                                        </p>
+                                        <p className="text-[11px] text-muted-foreground">
+                                            {item.product?.material || "Standard Fabric"} • {item.product?.width || "58 in"}
+                                        </p>
                                     </div>
-                                    <div className="flex-1 text-xs">
-                                        <p className="font-semibold">{item.product.name}</p>
-                                        <p className="text-muted-foreground">{item.quantity} meters</p>
+                                    <div className="text-right">
+                                        <p className="font-bold">{item.quantity} Meter(s)</p>
+                                        <p className="text-muted-foreground">{formatPrice(item.price * item.quantity)}</p>
                                     </div>
-                                    <p className="text-xs font-mono font-semibold">{formatPrice(item.price * item.quantity)}</p>
                                 </div>
                             ))}
-                        </div>
-                    </div>
-
-                    {/* Total & Delivery Address */}
-                    <div className="border-t pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                        <div>
-                            <p className="font-mono text-muted-foreground uppercase">Shipping To</p>
-                            <p className="font-medium mt-1">{order.customerName}</p>
-                            <p className="text-muted-foreground">{order.address}, {order.city}</p>
-                            <p className="text-muted-foreground">{order.phone}</p>
-                        </div>
-                        <div className="sm:text-right space-y-1">
-                            <p className="font-mono text-muted-foreground uppercase">Payment Details</p>
-                            <p><span className="text-muted-foreground">Method:</span> {order.paymentMethod}</p>
-                            <p><span className="text-muted-foreground">Payment Status:</span> {order.paymentStatus}</p>
-                            <p className="text-sm font-bold pt-2 border-t mt-2">Total: {formatPrice(order.totalAmount)}</p>
                         </div>
                     </div>
                 </div>
