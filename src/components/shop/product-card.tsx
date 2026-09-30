@@ -24,7 +24,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
                 {/* Top Badges */}
                 <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
-                    {product.isFeatured ? (
+                    {product.featured ? (
                         <Badge className="bg-background/90 text-foreground backdrop-blur-sm rounded-none px-2 py-0.5 text-[10px] font-mono tracking-widest uppercase border-none">
                             Featured
                         </Badge>

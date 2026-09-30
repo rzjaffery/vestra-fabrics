@@ -40,7 +40,7 @@ export default async function ShopPage() {
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {products.map((product: { id: string; name: string; slug: string; description: string; price: number; images: string[]; material: string; weight: string; width: string; stock: number; isFeatured: boolean; createdAt: Date; updatedAt: Date }) => (
+                    {products.map((product: { id: string; name: string; slug: string; description: string; price: number; images: string[]; material: string; weight: string; width: string; stock: number; featured: boolean; createdAt: Date; updatedAt: Date }) => (
                         <ProductCard key={product.id} product={product} />
                     ))}
                 </div>
