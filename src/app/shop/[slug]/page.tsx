@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ShieldCheck, Truck, RefreshCw } from "lucide-react"
 import {AddToCartButton} from "@/components/shop/add-to-cart-button";
+import {formatPrice} from "@/lib/format-price";
 
 interface ProductPageProps {
     params: Promise<{
@@ -71,7 +72,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                                 {product.name}
                             </h1>
                             <p className="text-2xl font-semibold mt-4 text-foreground">
-                                ${product.price.toFixed(2)}{" "}
+                                {formatPrice(product.price)}{" "}
                                 <span className="text-sm font-normal text-muted-foreground">/ meter</span>
                             </p>
                         </div>

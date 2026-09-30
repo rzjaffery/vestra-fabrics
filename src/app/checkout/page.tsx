@@ -6,6 +6,7 @@ import Image from "next/image"
 import { useCartStore } from "@/lib/store/use-cart-store"
 import { Button } from "@/components/ui/button"
 import { Truck, Landmark, CreditCard, CheckCircle, Loader2 } from "lucide-react"
+import {formatPrice} from "@/lib/format-price";
 
 export default function CheckoutPage() {
     const router = useRouter()
@@ -289,24 +290,26 @@ export default function CheckoutPage() {
                                 <div className="flex-1 text-xs">
                                     <h4 className="font-medium text-sm">{product.name}</h4>
                                     <p className="text-muted-foreground">{quantity} meters</p>
-                                    <p className="font-mono mt-1">${(product.price * quantity).toFixed(2)}</p>
+                                    <p className="font-mono mt-1">{formatPrice(product.price * quantity)}</p>
                                 </div>
                             </div>
                         ))}
                     </div>
 
                     <div className="border-t border-border pt-4 space-y-2 text-sm">
-                        <div className="flex justify-between text-muted-foreground text-xs">
-                            <span>Items Total</span>
-                            <span>${subtotal.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-muted-foreground text-xs">
-                            <span>Standard Courier Delivery</span>
-                            <span>PKR {shippingFee}</span>
-                        </div>
-                        <div className="flex justify-between font-semibold text-base border-t pt-3 mt-2">
-                            <span>Total Payable</span>
-                            <span>${total.toFixed(2)}</span>
+                        <div className="border-t border-border pt-4 space-y-2 text-sm">
+                            <div className="flex justify-between text-muted-foreground text-xs">
+                                <span>Items Total</span>
+                                <span>{formatPrice(subtotal)}</span>
+                            </div>
+                            <div className="flex justify-between text-muted-foreground text-xs">
+                                <span>Standard Courier Delivery</span>
+                                <span>{formatPrice(shippingFee)}</span>
+                            </div>
+                            <div className="flex justify-between font-semibold text-base border-t pt-3 mt-2">
+                                <span>Total Payable</span>
+                                <span>{formatPrice(total)}</span>
+                            </div>
                         </div>
                     </div>
                 </div>

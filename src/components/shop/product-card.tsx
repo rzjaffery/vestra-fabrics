@@ -3,6 +3,7 @@ import Link from "next/link"
 import { Product } from "@prisma/client"
 import { Badge } from "@/components/ui/badge"
 import { ArrowUpRight } from "lucide-react"
+import {formatPrice} from "@/lib/format-price";
 
 interface ProductCardProps {
     product: Product
@@ -66,7 +67,7 @@ export function ProductCard({ product }: ProductCardProps) {
             Price / Meter
           </span>
                     <span className="text-lg font-semibold tracking-tight text-foreground">
-            ${product.price.toFixed(2)}
+            {formatPrice(product.price)}
           </span>
                 </div>
             </div>

@@ -5,6 +5,7 @@ import {Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle} from "@/compo
 import {Minus, Plus, ShoppingBag, Trash2} from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import {formatPrice} from "@/lib/format-price";
 
 export function CartDrawer() {
     const [isMounted, setIsMounted] = useState(false)
@@ -80,7 +81,7 @@ export function CartDrawer() {
                                             </button>
                                         </div>
                                         <p className="text-[11px] text-muted-foreground mt-0.5">
-                                            ${product.price.toFixed(2)} / meter
+                                            {formatPrice(product.price)} / meter
                                         </p>
                                     </div>
 
@@ -103,7 +104,7 @@ export function CartDrawer() {
                                         </div>
 
                                         <p className="text-sm font-semibold">
-                                            ${(product.price * quantity).toFixed(2)}
+                                            {formatPrice(product.price * quantity)}
                                         </p>
                                     </div>
                                 </div>
@@ -117,7 +118,7 @@ export function CartDrawer() {
                     <SheetFooter className="border-t border-border pt-4 flex flex-col space-y-4">
                         <div className="flex justify-between text-base font-semibold w-full">
                             <span>Subtotal</span>
-                            <span>${totalPrice.toFixed(2)}</span>
+                            <span>{formatPrice(totalPrice)}</span>
                         </div>
                         <p className="text-[11px] text-muted-foreground text-center">
                             Taxes and shipping calculated at checkout.
