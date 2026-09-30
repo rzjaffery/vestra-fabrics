@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ShieldCheck, Truck, RefreshCw } from "lucide-react"
+import {AddToCartButton} from "@/components/shop/add-to-cart-button";
 
 interface ProductPageProps {
     params: Promise<{
@@ -98,9 +99,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
                         </div>
 
                         {/* Action Button */}
-                        <Button size="lg" className="w-full rounded-none tracking-widest uppercase text-xs h-14 bg-foreground text-background hover:bg-foreground/90">
-                            Add to Fabric Cart
-                        </Button>
+                        <AddToCartButton product={product}/>
                     </div>
 
                     {/* Value Propositions */}
