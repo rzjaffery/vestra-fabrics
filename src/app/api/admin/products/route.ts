@@ -1,50 +1,48 @@
-import {prisma} from "@/lib/prisma";
-import {NextResponse} from "next/server";
+import { NextResponse } from "next/server"
+import { prisma } from "@/lib/prisma"
 
-export async function GET(){
+export async function GET() {
     try {
         const products = await prisma.product.findMany({
-            orderBy: {createdAt: 'desc'},
-        });
-        return NextResponse.json(products);
-    }catch(err){
+            orderBy: { createdAt: "desc" },
+        })
+        return NextResponse.json({ products })
+    } catch (error: any) {
         return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 })
     }
 }
 
-export async function POST(req: Request){
+export async function POST(req: Request) {
     try {
         const body = await req.json()
         const { name, description, price, material, weight, width, stock, images, featured } = body
 
-        // 1. Validate required fields
         if (!name || price === undefined || stock === undefined) {
             return NextResponse.json(
-                { error: "Name, price, and stock are required fields." },
+                { error: "Name, price, and stock are required." },
                 { status: 400 }
             )
         }
 
-        // 2. Safely parse numbers to prevent NaN errors
         const parsedPrice = parseFloat(price)
         const parsedStock = parseInt(stock, 10)
 
         if (isNaN(parsedPrice) || isNaN(parsedStock)) {
             return NextResponse.json(
-                { error: "Price and Stock must be valid numeric values." },
+                { error: "Price and stock must be valid numbers." },
                 { status: 400 }
             )
         }
 
-        // 3. Generate a guaranteed unique slug using timestamp
+        // Generate unique slug
         const baseSlug = name
             .toLowerCase()
             .trim()
             .replace(/[^a-z0-9]+/g, "-")
             .replace(/(^-|-$)+/g, "")
-        const uniqueSlug = `${baseSlug}-${Date.now()}`
+        const slug = `${baseSlug}-${Date.now()}`
 
-        // 4. Clean up images format into a proper array
+        // Parse image array safely
         let imageArray: string[] = []
         if (Array.isArray(images)) {
             imageArray = images.filter((img) => typeof img === "string" && img.trim() !== "")
@@ -58,16 +56,15 @@ export async function POST(req: Request){
             ]
         }
 
-        // 5. Create product in Prisma
         const product = await prisma.product.create({
             data: {
                 name,
-                slug: uniqueSlug,
-                description: description || "",
+                slug,
+                description: description || null,
                 price: parsedPrice,
-                material: material || "Standard Fabric",
-                weight: weight || "N/A",
-                width: width || "N/A",
+                material: material || null,
+                weight: weight || null,
+                width: width || null,
                 stock: parsedStock,
                 images: imageArray,
                 featured: Boolean(featured),
@@ -75,7 +72,11 @@ export async function POST(req: Request){
         })
 
         return NextResponse.json({ success: true, product })
-    }catch(error: any){
-        return NextResponse.json({ error: error.message || "Failed to create fabric" }, { status: 500 })
+    } catch (error: any) {
+        console.error("Prisma Create Error:", error)
+        return NextResponse.json(
+            { error: error?.message || "Failed to create fabric listing" },
+            { status: 500 }
+        )
     }
 }

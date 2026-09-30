@@ -157,7 +157,7 @@ export function AdminProductManager({ initialProducts }: AdminProductManagerProp
                     {product.stock}m
                   </span>
                             </td>
-                            <td className="p-4 text-right space-x-2">
+                            <td className="p-4 text-right ">
                                 <Button
                                     size="sm"
                                     variant="outline"

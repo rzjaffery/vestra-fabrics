@@ -11,13 +11,14 @@ export async function PATCH(
 
         const updateData: any = {}
 
-        if (body.name) updateData.name = body.name
+        if (body.name !== undefined) updateData.name = body.name
         if (body.price !== undefined) updateData.price = parseFloat(body.price)
         if (body.stock !== undefined) updateData.stock = parseInt(body.stock, 10)
-        if (body.material) updateData.material = body.material
-        if (body.weight) updateData.weight = body.weight
-        if (body.width) updateData.width = body.width
+        if (body.material !== undefined) updateData.material = body.material
+        if (body.weight !== undefined) updateData.weight = body.weight
+        if (body.width !== undefined) updateData.width = body.width
         if (body.description !== undefined) updateData.description = body.description
+        if (body.featured !== undefined) updateData.featured = Boolean(body.featured)
 
         if (body.images) {
             updateData.images = Array.isArray(body.images) ? body.images : [body.images]
@@ -30,7 +31,7 @@ export async function PATCH(
 
         return NextResponse.json({ success: true, product: updatedProduct })
     } catch (error: any) {
-        return NextResponse.json({ error: error.message || "Failed to update product" }, { status: 500 })
+        return NextResponse.json({ error: error?.message || "Failed to update product" }, { status: 500 })
     }
 }
 
