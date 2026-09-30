@@ -15,7 +15,7 @@ export default function AdminLoginPage() {
         // Simple demo pin protection (e.g. 1234 or vestra2026)
         if (passcode === "1234" || passcode === "admin") {
             document.cookie = "admin_authenticated=true; path=/"
-            router.push("/admin/orders")
+            router.push("/admin")
         } else {
             setError(true)
         }
