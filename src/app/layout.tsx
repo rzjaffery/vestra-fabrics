@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/global/theme-provider";
 import { cn } from "@/lib/utils";
 import {Navbar} from "@/components/global/navbar";
+import {Footer} from "@/components/global/footer";
 
 const geistHeading = Geist({subsets:['latin'],variable:'--font-heading'});
 
@@ -32,6 +33,7 @@ export default function RootLayout({
       >
           <Navbar/>
         {children}
+          <Footer/>
       </ThemeProvider>
       </body>
       </html>

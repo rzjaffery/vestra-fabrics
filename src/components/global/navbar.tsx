@@ -40,9 +40,6 @@ export function Navbar() {
                         <Link href="/track-order" className="hover:text-foreground transition-colors">
                             Track Order
                         </Link>
-                        <Link href="/admin/orders" className="hover:text-foreground transition-colors">
-                            Admin
-                        </Link>
                     </nav>
 
                     {/* Actions */}
