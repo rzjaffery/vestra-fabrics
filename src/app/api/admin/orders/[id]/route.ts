@@ -31,6 +31,7 @@ export async function PATCH(
     } catch (error: any) {
         console.error("Order update error:", error)
         return NextResponse.json(
+            { error: error?.message || "Failed to update order" },
             { status: 500 }
         )
     }
