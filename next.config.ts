@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+    // experimental :{
+    //     turbopackImportTypeBytes: true
+    // },
+
     images: {
         remotePatterns: [
             {

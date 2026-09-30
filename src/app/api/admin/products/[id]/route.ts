@@ -1,43 +1,48 @@
-import {prisma} from "@/lib/prisma";
-import {NextResponse} from "next/server";
+import { NextResponse } from "next/server"
+import { prisma } from "@/lib/prisma"
 
 export async function PATCH(
     req: Request,
-    {params}:{params: Promise<{id:string}>}
-){
+    { params }: { params: Promise<{ id: string }> }
+) {
     try {
-        const {id} = await params
+        const { id } = await params
         const body = await req.json()
 
+        const updateData: any = {}
+
+        if (body.name) updateData.name = body.name
+        if (body.price !== undefined) updateData.price = parseFloat(body.price)
+        if (body.stock !== undefined) updateData.stock = parseInt(body.stock, 10)
+        if (body.material) updateData.material = body.material
+        if (body.weight) updateData.weight = body.weight
+        if (body.width) updateData.width = body.width
+        if (body.description !== undefined) updateData.description = body.description
+
+        if (body.images) {
+            updateData.images = Array.isArray(body.images) ? body.images : [body.images]
+        }
+
         const updatedProduct = await prisma.product.update({
-            where: {id},
-            data: {
-                ...(body.name && { name: body.name }),
-                ...(body.price && { price: parseFloat(body.price) }),
-                ...(body.stock !== undefined && { stock: parseInt(body.stock) }),
-                ...(body.material && { material: body.material }),
-                ...(body.weight && { weight: body.weight }),
-                ...(body.width && { width: body.width }),
-                ...(body.description && { description: body.description }),
-                ...(body.images && { images: Array.isArray(body.images) ? body.images : [body.images] }),
-            },
+            where: { id },
+            data: updateData,
         })
-        return NextResponse.json({success: true, product: updatedProduct})
-    }catch (error: any){
-        return NextResponse.json({ error: "Failed to update product" }, { status: 500 })
+
+        return NextResponse.json({ success: true, product: updatedProduct })
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message || "Failed to update product" }, { status: 500 })
     }
 }
 
 export async function DELETE(
     req: Request,
-    {params}:{params:Promise<{id:string}>}
-){
+    { params }: { params: Promise<{ id: string }> }
+) {
     try {
-        const {id} = await params
-        await prisma.product.delete({where: {id}})
-        return NextResponse.json({success: true})
-    }catch (error: any){
+        const { id } = await params
+        await prisma.product.delete({ where: { id } })
+        return NextResponse.json({ success: true })
+    } catch (error: any) {
         return NextResponse.json({ error: "Failed to delete product" }, { status: 500 })
     }
-
 }

@@ -17,26 +17,64 @@ export async function POST(req: Request){
         const body = await req.json()
         const { name, description, price, material, weight, width, stock, images, featured } = body
 
-        const slug = name
+        // 1. Validate required fields
+        if (!name || price === undefined || stock === undefined) {
+            return NextResponse.json(
+                { error: "Name, price, and stock are required fields." },
+                { status: 400 }
+            )
+        }
+
+        // 2. Safely parse numbers to prevent NaN errors
+        const parsedPrice = parseFloat(price)
+        const parsedStock = parseInt(stock, 10)
+
+        if (isNaN(parsedPrice) || isNaN(parsedStock)) {
+            return NextResponse.json(
+                { error: "Price and Stock must be valid numeric values." },
+                { status: 400 }
+            )
+        }
+
+        // 3. Generate a guaranteed unique slug using timestamp
+        const baseSlug = name
             .toLowerCase()
+            .trim()
             .replace(/[^a-z0-9]+/g, "-")
             .replace(/(^-|-$)+/g, "")
+        const uniqueSlug = `${baseSlug}-${Date.now()}`
 
+        // 4. Clean up images format into a proper array
+        let imageArray: string[] = []
+        if (Array.isArray(images)) {
+            imageArray = images.filter((img) => typeof img === "string" && img.trim() !== "")
+        } else if (typeof images === "string" && images.trim() !== "") {
+            imageArray = [images.trim()]
+        }
+
+        if (imageArray.length === 0) {
+            imageArray = [
+                "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?q=80&w=1000&auto=format&fit=crop",
+            ]
+        }
+
+        // 5. Create product in Prisma
         const product = await prisma.product.create({
             data: {
                 name,
-                slug,
-                description,
-                price: parseFloat(price),
-                material,
-                weight,
-                width,
-                stock: parseInt(stock),
-                images: Array.isArray(images) ? images : [images],
+                slug: uniqueSlug,
+                description: description || "",
+                price: parsedPrice,
+                material: material || "Standard Fabric",
+                weight: weight || "N/A",
+                width: width || "N/A",
+                stock: parsedStock,
+                images: imageArray,
                 featured: Boolean(featured),
             },
         })
-        return NextResponse.json({success: true, product})
+
+        return NextResponse.json({ success: true, product })
     }catch(error: any){
         return NextResponse.json({ error: error.message || "Failed to create fabric" }, { status: 500 })
     }
