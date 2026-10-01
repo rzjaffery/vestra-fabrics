@@ -8,6 +8,9 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// -----------------------------------------------------------------------------
+// 1. USER & AUTHENTICATION
+// -----------------------------------------------------------------------------
 enum Role {
   USER
   ADMIN
@@ -18,55 +21,115 @@ model User {
   email     String   @unique
   name      String?
   role      Role     @default(USER)
+  cart      Cart?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-enum ProductType {
-  FABRIC
-  READY_MADE
-}
-
+// -----------------------------------------------------------------------------
+// 2. CATEGORY (Strictly for ReadyMadeProduct)
+// -----------------------------------------------------------------------------
 model Category {
   id                String             @id @default(cuid())
-  name              String             @unique // e.g. "Unstitched Fabric", "Ready to Wear", "Pret Collection"
+  name              String             @unique
   slug              String             @unique
-  createdAt         DateTime           @default(now())
   readyMadeProducts ReadyMadeProduct[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 }
 
+// -----------------------------------------------------------------------------
+// 3. FABRIC ENTITY (Sold by meters / yards)
+// -----------------------------------------------------------------------------
 model Fabric {
   id          String   @id @default(cuid())
   name        String
   slug        String   @unique
-  description String?
+  description String?  @db.Text
   price       Float // Price per meter
-  stock       Int // Stock in meters
-  material    String?
+  stock       Float    @default(0) // Stock in meters (allows fractional meters like 12.5)
+  material    String? // e.g. "100% Lawn Cotton", "Silk"
   width       String? // e.g. "58 inches"
   weight      String? // e.g. "120 GSM"
   images      String[]
   featured    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([featured])
 }
 
+// -----------------------------------------------------------------------------
+// 4. READY-MADE GARMENT ENTITY (Sold by unit/piece)
+// -----------------------------------------------------------------------------
 model ReadyMadeProduct {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   name        String
-  slug        String    @unique
-  description String?
+  slug        String   @unique
+  description String?  @db.Text
   price       Float // Price per piece
-  stock       Int // Stock in pieces/units
-  sizes       String[] // e.g. ["S", "M", "L", "XL"]
-  categoryId  String?
-  category    Category? @relation(fields: [categoryId], references: [id])
+  stock       Int      @default(0) // Stock in unit count
+  sizes       String[] // e.g. ["XS", "S", "M", "L", "XL"]
   images      String[]
-  featured    Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  featured    Boolean  @default(false)
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([featured])
 }
 
+// -----------------------------------------------------------------------------
+// 5. CART & CART ITEMS
+// -----------------------------------------------------------------------------
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String?    @unique
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id     String @id @default(cuid())
+  cartId String
+  cart   Cart   @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  // Relation to either Fabric or ReadyMadeProduct
+  fabricId String?
+  fabric   Fabric? @relation(fields: [fabricId], references: [id], onDelete: Cascade)
+
+  readyMadeProductId String?
+  readyMadeProduct   ReadyMadeProduct? @relation(fields: [readyMadeProductId], references: [id], onDelete: Cascade)
+
+  quantity     Float // Meters for Fabric (e.g., 2.5), or whole units for Garments
+  selectedSize String? // Applicable when buying a ReadyMadeProduct
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([cartId])
+  @@index([fabricId])
+  @@index([readyMadeProductId])
+}
+
+// -----------------------------------------------------------------------------
+// 6. ORDERS & ORDER ITEMS
+// -----------------------------------------------------------------------------
 enum PaymentMethod {
   COD
   BANK_TRANSFER
@@ -101,9 +164,24 @@ model Order {
 }
 
 model OrderItem {
-  id       String @id @default(cuid())
-  orderId  String
-  order    Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  quantity Int
-  price    Float
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  // Relations to purchase items
+  fabricId String?
+  fabric   Fabric? @relation(fields: [fabricId], references: [id], onDelete: SetNull)
+
+  readyMadeProductId String?
+  readyMadeProduct   ReadyMadeProduct? @relation(fields: [readyMadeProductId], references: [id], onDelete: SetNull)
+
+  quantity     Float // Meters for Fabric or unit count for ReadyMade
+  price        Float // Historical price recorded at purchase time
+  selectedSize String? // Size chosen if item was a ReadyMadeProduct
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([fabricId])
+  @@index([readyMadeProductId])
 }
