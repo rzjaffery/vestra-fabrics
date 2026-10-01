@@ -35,25 +35,36 @@ model Category {
   createdAt DateTime  @default(now())
 }
 
-model Product {
-  id          String      @id @default(cuid())
+model Fabric {
+  id          String   @id @default(cuid())
   name        String
-  slug        String      @unique
+  slug        String   @unique
   description String?
-  price       Float
-  type        ProductType @default(FABRIC)
-  images      String[]
+  price       Float // Price per meter
+  stock       Int // Stock in meters
   material    String?
-  weight      String?
-  width       String?
-  sizes       String[]
+  width       String? // e.g. "58 inches"
+  weight      String? // e.g. "120 GSM"
+  images      String[]
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ReadyMadeProduct {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  price       Float // Price per piece
+  stock       Int // Stock in pieces/units
+  sizes       String[] // e.g. ["S", "M", "L", "XL"]
   categoryId  String?
-  category    Category?   @relation(fields: [categoryId], references: [id])
-  stock       Int         @default(0)
-  featured    Boolean     @default(false)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  orderItems  OrderItem[]
+  category    Category? @relation(fields: [categoryId], references: [id])
+  images      String[]
+  featured    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 enum PaymentMethod {
