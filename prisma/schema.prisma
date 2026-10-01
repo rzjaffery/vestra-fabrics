@@ -22,16 +22,33 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
+enum ProductType {
+  FABRIC
+  READY_MADE
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique // e.g. "Unstitched Fabric", "Ready to Wear", "Pret Collection"
+  slug      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+}
+
 model Product {
   id          String      @id @default(cuid())
   name        String
   slug        String      @unique
   description String?
   price       Float
+  type        ProductType @default(FABRIC)
   images      String[]
   material    String?
   weight      String?
   width       String?
+  sizes       String[]
+  categoryId  String?
+  category    Category?   @relation(fields: [categoryId], references: [id])
   stock       Int         @default(0)
   featured    Boolean     @default(false)
   createdAt   DateTime    @default(now())

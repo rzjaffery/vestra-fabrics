@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, ShoppingBag, Layers, Store } from "lucide-react"
+import {LayoutDashboard, ShoppingBag, Layers, Store, Scissors} from "lucide-react"
 
 export default function AdminLayout({
                                         children,
@@ -26,6 +26,11 @@ export default function AdminLayout({
             href: "/admin/products",
             label: "Fabric Inventory",
             icon: Layers,
+        },
+        {
+            href: "/admin/stitched",
+            label: "Stitched Collection",
+            icon: Scissors,
         },
     ]
 
