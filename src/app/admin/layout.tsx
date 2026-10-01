@@ -1,8 +1,9 @@
+// app/admin/layout.tsx
 "use client"
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {LayoutDashboard, ShoppingBag, Layers, Store, Scissors} from "lucide-react"
+import { LayoutDashboard, ShoppingBag, Layers, Store, Scissors } from "lucide-react"
 
 export default function AdminLayout({
                                         children,
@@ -23,18 +24,17 @@ export default function AdminLayout({
             icon: ShoppingBag,
         },
         {
-            href: "/admin/products",
+            href: "/admin/fabrics",
             label: "Fabric Inventory",
             icon: Layers,
         },
         {
-            href: "/admin/stitched",
-            label: "Stitched Collection",
+            href: "/admin/ready-made",
+            label: "Ready Made Collection",
             icon: Scissors,
         },
     ]
 
-    // Check if the current route matches the link href
     const checkIsActive = (href: string) => {
         if (href === "/admin") {
             return pathname === "/admin"
@@ -48,9 +48,9 @@ export default function AdminLayout({
             <aside className="w-64 border-r border-border bg-card flex flex-col justify-between hidden md:flex">
                 <div className="p-6 space-y-8">
                     <div>
-                        <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground block">
-                            Management Portal
-                        </span>
+            <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground block">
+              Management Portal
+            </span>
                         <h2 className="text-lg font-light tracking-tight text-foreground mt-0.5">
                             Vestra Fabrics
                         </h2>
@@ -74,7 +74,7 @@ export default function AdminLayout({
                                     <Icon className="h-4 w-4" />
                                     {item.label}
                                 </Link>
-                            )
+                            );
                         })}
                     </nav>
                 </div>
@@ -82,7 +82,7 @@ export default function AdminLayout({
                 {/* Footer Link */}
                 <div className="p-4 border-t border-border">
                     <Link
-                        href="/shop"
+                        href="/fabrics"
                         className="flex items-center gap-2 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors p-2"
                     >
                         <Store className="h-4 w-4" />
