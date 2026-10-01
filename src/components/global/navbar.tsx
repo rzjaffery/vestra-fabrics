@@ -31,8 +31,11 @@ export function Navbar() {
 
                     {/* Links */}
                     <nav className="hidden md:flex items-center gap-8 text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                        <Link href="/shop" className="hover:text-foreground transition-colors">
-                            Shop Collection
+                        <Link href="/fabrics" className="hover:text-foreground transition-colors">
+                            Fabrics
+                        </Link>
+                        <Link href="/ready-made" className="hover:text-foreground transition-colors">
+                            Ready Made
                         </Link>
                         <Link href="/about" className="hover:text-foreground transition-colors">
                             Our Story
