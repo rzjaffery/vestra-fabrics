@@ -133,7 +133,7 @@ export function AdminProductManager({ initialProducts }: AdminProductManagerProp
                     {products.map((product) => (
                         <tr key={product.id} className="hover:bg-muted/20">
                             <td className="p-4 flex items-center gap-3">
-                                <div className="relative h-12 w-12 bg-muted border flex-shrink-0">
+                                <div className="relative h-12 w-12 bg-muted border shrink-0">
                                     <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
                                 </div>
                                 <div>
@@ -157,7 +157,7 @@ export function AdminProductManager({ initialProducts }: AdminProductManagerProp
                     {product.stock}m
                   </span>
                             </td>
-                            <td className="p-4 text-right ">
+                            <td className="p-4 text-right">
                                 <Button
                                     size="sm"
                                     variant="outline"

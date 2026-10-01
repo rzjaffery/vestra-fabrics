@@ -1,7 +1,7 @@
 import {prisma} from "@/lib/prisma";
 import {PackageCheck} from "lucide-react";
 import {formatPrice} from "@/lib/format-price";
-import {AdminOrderTable} from "@/components/admin/admin-order-table";
+import {AdminOrderManager} from "@/components/admin/admin-order-manager";
 
 
 export const revalidate = 0;
@@ -40,7 +40,7 @@ export default async function AdminOrdersPage(){
                 <div className='border border-border bg-card p-4'>
                     <div className='flex items-center justify-between text-muted-foreground mb-2'>
                         <span className="text-xs uppercase font-mono tracking-wider">Total Sales</span>
-                        <PackageCheck className="h-4 w-4" />
+                        <PackageCheck className="h-4 w-4 text-green-500" />
                     </div>
                     <p className="text-2xl font-semibold">{formatPrice(totalRevenue)}</p>
                     <p className="text-[11px] text-muted-foreground mt-1">{orders.length} total orders</p>
@@ -48,29 +48,29 @@ export default async function AdminOrdersPage(){
                 <div className='border border-border bg-card p-4'>
                     <div className='flex items-center justify-between text-muted-foreground mb-2'>
                         <span className="text-xs uppercase font-mono tracking-wider">Pending Orders</span>
-                        <PackageCheck className="h-4 w-4" />
+                        <PackageCheck className="h-4 w-4 text-amber-600" />
                     </div>
-                    <p className="text-2xl font-semibold">{formatPrice(pendingOrders)}</p>
-                    <p className="text-[11px] text-muted-foreground mt-1">{orders.length} Awaiting Confirmation</p>
+                    <p className="text-2xl font-semibold">{pendingOrders} orders</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">{pendingOrders} awaiting confirmation</p>
                 </div>
                 <div className='border border-border bg-card p-4'>
                     <div className='flex items-center justify-between text-muted-foreground mb-2'>
                         <span className="text-xs uppercase font-mono tracking-wider">In Processing</span>
-                        <PackageCheck className="h-4 w-4" />
+                        <PackageCheck className="h-4 w-4 text-blue-600" />
                     </div>
-                    <p className="text-2xl font-semibold">{formatPrice(processingOrders)}</p>
-                    <p className="text-[11px] text-muted-foreground mt-1">{orders.length} Mill cutting a package</p>
+                    <p className="text-2xl font-semibold">{processingOrders} orders</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">{processingOrders} orders in processing</p>
                 </div>
                 <div className='border border-border bg-card p-4'>
                     <div className='flex items-center justify-between text-muted-foreground mb-2'>
                         <span className="text-xs uppercase font-mono tracking-wider">Dispatched</span>
-                        <PackageCheck className="h-4 w-4" />
+                        <PackageCheck className="h-4 w-4 text-purple-600" />
                     </div>
-                    <p className="text-2xl font-semibold">{formatPrice(shippedOrders)}</p>
-                    <p className="text-[11px] text-muted-foreground mt-1">{orders.length} Handed to courier</p>
+                    <p className="text-2xl font-semibold">{shippedOrders} orders</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">{shippedOrders} package handed to courier</p>
                 </div>
             </div>
-            <AdminOrderTable initialOrders={orders}/>
+            <AdminOrderManager initialOrders={orders}/>
         </div>
 
     )
