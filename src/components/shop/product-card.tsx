@@ -1,21 +1,59 @@
+// components/product-card.tsx
 import Image from "next/image"
 import Link from "next/link"
-import { Product } from "@prisma/client"
 import { Badge } from "@/components/ui/badge"
 import { ArrowUpRight } from "lucide-react"
-import {formatPrice} from "@/lib/format-price";
+import { formatPrice } from "@/lib/format-price"
+
+export interface ProductCardItem {
+    id: string
+    name: string
+    slug: string
+    material?: string | null
+    images?: string[]
+    imageUrl?: string | null
+    price?: number
+    pricePerMeter?: number
+    stock?: number
+    inStockMeters?: number
+    weight?: string | number | null
+    weightGsm?: number | null
+    width?: string | number | null
+    widthInches?: number | null
+    featured?: boolean
+}
 
 interface ProductCardProps {
-    product: Product
+    product: ProductCardItem
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+    // Normalize fields between Fabric and General Product models
+    const displayImage = product.images?.[0] || product.imageUrl || "/placeholder-fabric.jpg"
+    const displayPrice = product.pricePerMeter ?? product.price ?? 0
+    const displayStock = product.stock ?? product.inStockMeters ?? 0
+    const displayMaterial = product.material || "Premium Textile"
+
+    const displayWeight = product.weight
+        ? String(product.weight)
+        : product.weightGsm
+            ? `${product.weightGsm} GSM`
+            : null
+
+    const displayWidth = product.width
+        ? String(product.width)
+        : product.widthInches
+            ? `${product.widthInches}"`
+            : null
+
+    const href = `/fabrics/${product.slug || product.id}`
+
     return (
-        <div className="group relative flex flex-col overflow-hidden border border-border bg-card transition-all duration-300 hover:border-foreground/40">
+        <div className="group relative flex flex-col overflow-hidden border border-border bg-card transition-all duration-300 hover:border-foreground/40 rounded-sm">
             {/* Fixed Height Image Container */}
             <div className="relative w-full h-80 overflow-hidden bg-muted">
                 <Image
-                    src={product.images[0]}
+                    src={displayImage}
                     alt={product.name}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
@@ -32,8 +70,14 @@ export function ProductCard({ product }: ProductCardProps) {
                         <div />
                     )}
 
-                    <span className="bg-background/80 text-foreground/80 backdrop-blur-sm text-[10px] font-medium px-2 py-0.5 rounded-none border border-border/40">
-            {product.stock > 0 ? "In Stock" : "Out of Stock"}
+                    <span
+                        className={`backdrop-blur-sm text-[10px] font-mono px-2 py-0.5 rounded-none border ${
+                            displayStock > 0
+                                ? "bg-background/80 text-foreground border-border/40"
+                                : "bg-destructive/10 text-destructive border-destructive/20"
+                        }`}
+                    >
+            {displayStock > 0 ? "In Stock" : "Out of Stock"}
           </span>
                 </div>
             </div>
@@ -41,33 +85,42 @@ export function ProductCard({ product }: ProductCardProps) {
             {/* Card Details */}
             <div className="flex flex-1 flex-col justify-between p-5 space-y-4">
                 <div>
-                    <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground mb-1">
-                        {product.material}
+                    <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1">
+                        {displayMaterial}
                     </p>
                     <h3 className="font-medium text-base tracking-tight text-foreground group-hover:underline underline-offset-4 flex items-center justify-between">
-                        <Link href={`/shop/${product.slug}`}>{product.name}</Link>
-                        <ArrowUpRight className="w-4 h-4 text-muted-foreground" />
+                        <Link href={href}>
+                            <span className="absolute inset-0" />
+                            {product.name}
+                        </Link>
+                        <ArrowUpRight className="w-4 h-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                     </h3>
                 </div>
 
                 {/* Specs */}
-                <div className="flex items-center gap-2 text-[11px] text-muted-foreground border-t border-border/50 pt-3">
-          <span className="bg-muted px-2 py-0.5 rounded-none font-mono text-[10px]">
-            {product.weight}
-          </span>
-                    <span>•</span>
-                    <span className="bg-muted px-2 py-0.5 rounded-none font-mono text-[10px]">
-            {product.width}
-          </span>
-                </div>
+                {(displayWeight || displayWidth) && (
+                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground border-t border-border/50 pt-3 font-mono">
+                        {displayWeight && (
+                            <span className="bg-muted px-2 py-0.5 rounded-none text-[10px]">
+                {displayWeight}
+              </span>
+                        )}
+                        {displayWeight && displayWidth && <span>•</span>}
+                        {displayWidth && (
+                            <span className="bg-muted px-2 py-0.5 rounded-none text-[10px]">
+                {displayWidth}
+              </span>
+                        )}
+                    </div>
+                )}
 
                 {/* Pricing */}
                 <div className="flex items-baseline justify-between border-t border-border/50 pt-3">
-          <span className="text-xs uppercase text-muted-foreground tracking-wider">
+          <span className="text-[10px] font-mono uppercase text-muted-foreground tracking-wider">
             Price / Meter
           </span>
-                    <span className="text-lg font-semibold tracking-tight text-foreground">
-            {formatPrice(product.price)}
+                    <span className="text-lg font-semibold tracking-tight font-mono text-foreground">
+            {formatPrice(displayPrice)}
           </span>
                 </div>
             </div>
