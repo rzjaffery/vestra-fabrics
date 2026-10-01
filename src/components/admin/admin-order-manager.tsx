@@ -164,13 +164,13 @@ export function AdminOrderManager({ initialOrders }: AdminOrderManagerProps) {
                         {order.status}
                       </span>
                                     </td>
-                                    <td className="p-4 text-right space-x-2">
+                                    <td className="p-4 text-right ">
                                         {/* Print Invoice / Slip Button */}
                                         <Button
                                             size="sm"
                                             variant="outline"
                                             onClick={() => setSelectedPrintOrder(order)}
-                                            className="h-8 text-[11px] rounded-none font-mono gap-1"
+                                            className="w-15 h-8 text-[11px] rounded-none font-mono gap-1"
                                             title="Print Invoice / Packing Slip"
                                         >
                                             <Printer className="h-3.5 w-3.5" />
@@ -182,7 +182,7 @@ export function AdminOrderManager({ initialOrders }: AdminOrderManagerProps) {
                                             size="sm"
                                             variant="outline"
                                             onClick={() => toggleExpand(order.id)}
-                                            className="h-8 text-[11px] rounded-none font-mono gap-1"
+                                            className="h-8 w-15 text-[11px] rounded-none font-mono gap-1"
                                         >
                                             <Eye className="h-3.5 w-3.5" />
                                             {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
