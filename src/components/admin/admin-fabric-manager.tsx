@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from "react"
+import React, {useEffect, useState} from "react"
 import Image from "next/image"
 import { Plus, Trash2, Edit3, Loader2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -40,6 +40,7 @@ export function AdminFabricManager({ initialFabrics = [] }: AdminFabricManagerPr
     const [featured, setFeatured] = useState(false)
 
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isLoading, setIsLoading] = useState(true) // 1. Track loading state
     const [deletingId, setDeletingId] = useState<string | null>(null)
 
     // Edit Modal State
@@ -55,6 +56,28 @@ export function AdminFabricManager({ initialFabrics = [] }: AdminFabricManagerPr
     const [editImagesInput, setEditImagesInput] = useState("")
     const [editFeatured, setEditFeatured] = useState(false)
     const [isUpdating, setIsUpdating] = useState(false)
+
+    const fetchFabrics = async () => {
+        try {
+            setIsLoading(true)
+            const res = await fetch("/api/admin/fabrics")
+            if (res.ok) {
+                const data = await res.json()
+                // Ensure data structure matches (data.fabrics or data)
+                setFabrics(data.fabrics || data)
+            } else {
+                console.error("Failed to fetch fabrics status:", res.status)
+            }
+        } catch (err) {
+            console.error("Error fetching fabrics:", err)
+        } finally {
+            setIsLoading(false) // Stop loading indicator
+        }
+    }
+
+    useEffect(() => {
+        fetchFabrics()
+    }, [])
 
     const generateSlug = (text: string) => {
         return text
@@ -349,7 +372,6 @@ export function AdminFabricManager({ initialFabrics = [] }: AdminFabricManagerPr
                 </Button>
             </form>
 
-            {/* Fabric Inventory List Table */}
             <div className="border border-border bg-card overflow-x-auto">
                 <table className="w-full text-left text-xs">
                     <thead className="bg-muted/50 border-b border-border uppercase font-mono text-[11px] text-muted-foreground">
@@ -363,13 +385,25 @@ export function AdminFabricManager({ initialFabrics = [] }: AdminFabricManagerPr
                     </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                    {fabrics.length === 0 ? (
+                    {/* 3. Handle Loading State FIRST */}
+                    {isLoading ? (
+                        <tr>
+                            <td colSpan={6} className="p-8 text-center text-muted-foreground font-mono">
+                                <div className="flex items-center justify-center gap-2">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Loading fabrics...
+                                </div>
+                            </td>
+                        </tr>
+                    ) : fabrics.length === 0 ? (
+                        /* 4. Handle Empty Database State ONLY when loading is finished */
                         <tr>
                             <td colSpan={6} className="p-8 text-center text-muted-foreground font-mono">
                                 No fabrics found in database.
                             </td>
                         </tr>
                     ) : (
+                        /* 5. Render Fabrics */
                         fabrics.map((item) => (
                             <tr key={item.id} className="hover:bg-muted/20">
                                 <td className="p-4 flex items-center gap-3">
@@ -397,15 +431,15 @@ export function AdminFabricManager({ initialFabrics = [] }: AdminFabricManagerPr
                                 <td className="p-4 font-semibold font-mono">{formatPrice(item.price)}</td>
 
                                 <td className="p-4 font-mono">
-                                        <span
-                                            className={`px-2 py-1 text-[10px] uppercase font-bold rounded ${
-                                                item.stock < 50
-                                                    ? "bg-destructive/10 text-destructive"
-                                                    : "bg-emerald-500/10 text-emerald-600"
-                                            }`}
-                                        >
-                                            {item.stock}m
-                                        </span>
+                                    <span
+                                        className={`px-2 py-1 text-[10px] uppercase font-bold rounded ${
+                                            item.stock < 50
+                                                ? "bg-destructive/10 text-destructive"
+                                                : "bg-emerald-500/10 text-emerald-600"
+                                        }`}
+                                    >
+                                        {item.stock}m
+                                    </span>
                                 </td>
 
                                 <td className="p-4 text-right space-x-1">
@@ -437,7 +471,6 @@ export function AdminFabricManager({ initialFabrics = [] }: AdminFabricManagerPr
                     </tbody>
                 </table>
             </div>
-
             {/* EDIT FABRIC MODAL */}
             {editingFabric && (
                 <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 overflow-y-auto">
