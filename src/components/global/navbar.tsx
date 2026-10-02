@@ -48,6 +48,9 @@ export function Navbar() {
                         <Link href="/track-order" className="hover:text-foreground transition-colors">
                             Track Order
                         </Link>
+                        <Link href="/calculator" className="hover:text-foreground transition-colors">
+                            Meterage Estimator
+                        </Link>
                     </nav>
 
                     {/* Actions */}
