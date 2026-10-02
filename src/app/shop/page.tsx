@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma"
-import { ProductCard } from "@/components/shop/product-card"
+import { ProductCardFabric } from "@/components/store/product-card-fabric"
 
 export const revalidate = 0
 
@@ -41,7 +41,7 @@ export default async function ShopPage() {
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {products.map((product: { id: string; name: string; slug: string; description: string; price: number; images: string[]; material: string; weight: string; width: string; stock: number; featured: boolean; createdAt: Date; updatedAt: Date }) => (
-                        <ProductCard key={product.id} product={product} />
+                        <ProductCardFabric key={product.id} product={product} />
                     ))}
                 </div>
             )}

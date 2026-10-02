@@ -1,22 +1,27 @@
-'use client'
-import Link from "next/link";
-import { ThemeToggle } from "./theme-toggle";
-import {ShoppingBag} from "lucide-react";
-import {Button} from "@/components/ui/button";
-import {useEffect, useState} from "react";
-import {useCartStore} from "@/lib/store/use-cart-store";
-import {CartDrawer} from "@/components/shop/cart-drawer";
+"use client"
+
+import Link from "next/link"
+import { ThemeToggle } from "./theme-toggle"
+import { ShoppingBag } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react"
+import { useCartStore } from "@/lib/store/use-cart-store"
+import { CartDrawer } from "@/components/store/cart-drawer"
 
 export function Navbar() {
+    const [isMounted, setIsMounted] = useState(false)
 
-    const [isMounted, setIsMounted] = useState(false);
-    const {openCart, getTotalItems} = useCartStore()
+    const openCart = useCartStore((state) => state.openCart)
+    const items = useCartStore((state) => state.items)
 
     useEffect(() => {
         setIsMounted(true)
-    }, []);
+    }, [])
 
-    const totalItems = isMounted ? getTotalItems() : 0;
+    // Calculate total count safely after client hydration
+    const totalItems = isMounted
+        ? items.reduce((total, item) => total + (item.quantity || 1), 0)
+        : 0
 
     return (
         <>

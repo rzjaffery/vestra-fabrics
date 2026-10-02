@@ -1,15 +1,14 @@
 // app/ready-made/page.tsx
-import { prisma } from "@/lib/prisma"
-import { ProductCard } from "@/components/shop/product-card"
+import {prisma} from "@/lib/prisma"
+import {ProductCardReady} from "@/components/store/product-card-ready";
 
 export const revalidate = 0
 
 async function getReadyMadeProducts() {
     try {
-        const products = await prisma.readyMadeProduct.findMany({
-            orderBy: { createdAt: "desc" },
+        return await prisma.readyMadeProduct.findMany({
+            orderBy: {createdAt: "desc"},
         })
-        return products
     } catch (error) {
         console.error("Failed to fetch ready made products from database:", error)
         return []
@@ -91,7 +90,7 @@ export default async function ReadyMadePage() {
                     ) : (
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                             {products.map((item: any) => {
-                                // Mapping product data cleanly into ProductCard shape
+                                // Mapping product data cleanly into ProductCardFabric shape
                                 const mappedProduct = {
                                     id: item.id,
                                     name: item.name,
@@ -103,7 +102,7 @@ export default async function ReadyMadePage() {
                                     featured: item.featured ?? false,
                                 }
 
-                                return <ProductCard key={item.id} product={mappedProduct} />
+                                return <ProductCardReady key={item.id} product={mappedProduct} />
                             })}
                         </div>
                     )}

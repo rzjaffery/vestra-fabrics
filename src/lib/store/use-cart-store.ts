@@ -1,23 +1,44 @@
+// src/lib/store/use-cart-store.ts
 import { create } from "zustand"
-import { persist, createJSONStorage } from "zustand/middleware"
-import { Product } from "@prisma/client"
+import { persist } from "zustand/middleware"
 
 export interface CartItem {
-    product: Product
-    quantity: number // Meters of fabric
+    id: string
+    productId: string
+    name: string
+    slug: string
+    price: number
+    image: string
+    itemType: "FABRIC" | "READY_MADE"
+    selectedSize?: string
+    meters?: number
+    quantity: number
+    stock: number
+}
+
+interface AddItemInput {
+    productId: string
+    name: string
+    slug: string
+    price: number
+    image: string
+    itemType: "FABRIC" | "READY_MADE"
+    selectedSize?: string
+    meters?: number
+    quantity?: number
+    stock: number
 }
 
 interface CartStore {
     items: CartItem[]
     isOpen: boolean
-    addItem: (product: Product, quantity?: number) => void
-    removeItem: (productId: string) => void
-    updateQuantity: (productId: string, quantity: number) => void
-    clearCart: () => void
-    toggleCart: () => void
     openCart: () => void
     closeCart: () => void
-    getTotalPrice: () => number
+    toggleCart: () => void
+    addItem: (item: AddItemInput) => void
+    removeItem: (id: string) => void
+    updateQuantity: (id: string, quantity: number) => void
+    clearCart: () => void
     getTotalItems: () => number
 }
 
@@ -27,68 +48,65 @@ export const useCartStore = create<CartStore>()(
             items: [],
             isOpen: false,
 
-            addItem: (product, quantity = 1) => {
-                const currentItems = get().items
-                const existingItem = currentItems.find(
-                    (item) => item.product.id === product.id
-                )
-
-                if (existingItem) {
-                    set({
-                        items: currentItems.map((item) =>
-                            item.product.id === product.id
-                                ? { ...item, quantity: item.quantity + quantity }
-                                : item
-                        ),
-                        isOpen: true, // Automatically open cart drawer on item add
-                    })
-                } else {
-                    set({
-                        items: [...currentItems, { product, quantity }],
-                        isOpen: true,
-                    })
-                }
-            },
-
-            removeItem: (productId) => {
-                set({
-                    items: get().items.filter((item) => item.product.id !== productId),
-                })
-            },
-
-            updateQuantity: (productId, quantity) => {
-                if (quantity <= 0) {
-                    get().removeItem(productId)
-                    return
-                }
-
-                set({
-                    items: get().items.map((item) =>
-                        item.product.id === productId ? { ...item, quantity } : item
-                    ),
-                })
-            },
-
-            clearCart: () => set({ items: [] }),
-            toggleCart: () => set({ isOpen: !get().isOpen }),
             openCart: () => set({ isOpen: true }),
             closeCart: () => set({ isOpen: false }),
+            toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
 
-            getTotalPrice: () => {
-                return get().items.reduce(
-                    (total, item) => total + item.product.price * item.quantity,
-                    0
-                )
+            addItem: (newItem) => {
+                const compositeId = `${newItem.productId}-${newItem.selectedSize || ""}-${newItem.meters || ""}`
+
+                set((state) => {
+                    const existingIndex = state.items.findIndex((i) => i.id === compositeId)
+
+                    if (existingIndex > -1) {
+                        const updatedItems = [...state.items]
+                        if (newItem.itemType === "FABRIC" && newItem.meters) {
+                            updatedItems[existingIndex].meters =
+                                (updatedItems[existingIndex].meters || 0) + newItem.meters
+                        } else {
+                            updatedItems[existingIndex].quantity += newItem.quantity || 1
+                        }
+                        return { items: updatedItems, isOpen: true }
+                    }
+
+                    const cartItem: CartItem = {
+                        id: compositeId,
+                        productId: newItem.productId,
+                        name: newItem.name,
+                        slug: newItem.slug,
+                        price: newItem.price,
+                        image: newItem.image,
+                        itemType: newItem.itemType,
+                        selectedSize: newItem.selectedSize,
+                        meters: newItem.meters,
+                        quantity: newItem.quantity || 1,
+                        stock: newItem.stock,
+                    }
+
+                    return { items: [...state.items, cartItem], isOpen: true }
+                })
             },
 
+            removeItem: (id) =>
+                set((state) => ({
+                    items: state.items.filter((item) => item.id !== id),
+                })),
+
+            updateQuantity: (id, quantity) =>
+                set((state) => ({
+                    items: state.items.map((item) =>
+                        item.id === id ? { ...item, quantity } : item
+                    ),
+                })),
+
+            clearCart: () => set({ items: [] }),
+
             getTotalItems: () => {
-                return get().items.reduce((total, item) => total + item.quantity, 0)
+                return get().items.reduce((total, item) => total + (item.quantity || 1), 0)
             },
         }),
         {
-            name: "vestra-fabric-cart",
-            storage: createJSONStorage(() => localStorage),
-            skipHydration: true, // Prevent Next.js server/client hydration mismatch
+            name: "vestra-cart-storage",
         }
     )
 )

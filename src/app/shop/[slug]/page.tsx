@@ -4,7 +4,7 @@ import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ShieldCheck, Truck, RefreshCw } from "lucide-react"
-import {AddToCartButton} from "@/components/shop/add-to-cart-button";
+import {AddToCartButton} from "@/components/store/add-to-cart-button";
 import {formatPrice} from "@/lib/format-price";
 
 interface ProductPageProps {

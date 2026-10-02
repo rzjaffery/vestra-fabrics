@@ -1,6 +1,6 @@
 // app/fabrics/page.tsx
 import { prisma } from "@/lib/prisma"
-import { ProductCard } from "@/components/shop/product-card"
+import { ProductCardFabric } from "@/components/store/product-card-fabric"
 
 export const revalidate = 0
 
@@ -92,7 +92,7 @@ export default async function CustomerFabricsPage() {
                     ) : (
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                             {fabrics.map((fabric: any) => (
-                                <ProductCard key={fabric.id} product={fabric} />
+                                <ProductCardFabric key={fabric.id} product={fabric} />
                             ))}
                         </div>
                     )}
