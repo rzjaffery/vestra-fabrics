@@ -145,17 +145,17 @@ export function AdminReadyMadeManager({
         }
     }
 
-    const openEditModal = (item: ReadyMadeItem) => {
-        setEditingProduct(item)
-        setEditName(item.name || "")
-        setEditSlug(item.slug || "")
-        setEditDescription(item.description || "")
-        setEditPrice(item.price !== undefined ? String(item.price) : "")
-        setEditStock(item.stock !== undefined ? String(item.stock) : "0")
-        setEditCategoryId(item.categoryId || "")
-        setEditImagesInput(item.images ? item.images.join(", ") : "")
-        setEditFeatured(!!item.featured)
-        setEditSelectedSizes(item.sizes || ["S", "M", "L", "XL"])
+    const openEditModal = (readyMade: ReadyMadeItem) => {
+        setEditingProduct(readyMade)
+        setEditName(readyMade.name || "")
+        setEditSlug(readyMade.slug || "")
+        setEditDescription(readyMade.description || "")
+        setEditPrice(readyMade.price !== undefined ? String(readyMade.price) : "")
+        setEditStock(readyMade.stock !== undefined ? String(readyMade.stock) : "0")
+        setEditCategoryId(readyMade.categoryId || "")
+        setEditImagesInput(readyMade.images ? readyMade.images.join(", ") : "")
+        setEditFeatured(readyMade.featured)
+        setEditSelectedSizes(readyMade.sizes || ["S", "M", "L", "XL"])
     }
 
     const handleUpdate = async (e: React.FormEvent) => {

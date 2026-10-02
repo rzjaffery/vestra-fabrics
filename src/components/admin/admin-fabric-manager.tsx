@@ -70,7 +70,7 @@ export function AdminFabricManager({ initialFabrics = [] }: AdminFabricManagerPr
         setSlug(generateSlug(val))
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault()
         setIsSubmitting(true)
 
@@ -122,21 +122,21 @@ export function AdminFabricManager({ initialFabrics = [] }: AdminFabricManagerPr
         }
     }
 
-    const openEditModal = (item: FabricItem) => {
-        setEditingFabric(item)
-        setEditName(item.name || "")
-        setEditSlug(item.slug || "")
-        setEditDescription(item.description || "")
-        setEditPrice(item.price !== undefined ? String(item.price) : "")
-        setEditStock(item.stock !== undefined ? String(item.stock) : "0")
-        setEditMaterial(item.material || "")
-        setEditWidth(item.width || "58 in")
-        setEditWeight(item.weight || "")
-        setEditImagesInput(item.images ? item.images.join(", ") : "")
-        setEditFeatured(!!item.featured)
+    const openEditModal = (fabric: FabricItem) => {
+        setEditingFabric(fabric)
+        setEditName(fabric.name || "")
+        setEditSlug(fabric.slug || "")
+        setEditDescription(fabric.description || "")
+        setEditPrice(fabric.price !== undefined ? String(fabric.price) : "")
+        setEditStock(fabric.stock !== undefined ? String(fabric.stock) : "0")
+        setEditMaterial(fabric.material || "")
+        setEditWidth(fabric.width || "58 in")
+        setEditWeight(fabric.weight || "")
+        setEditImagesInput(fabric.images ? fabric.images.join(", ") : "")
+        setEditFeatured(fabric.featured)
     }
 
-    const handleUpdate = async (e: React.FormEvent) => {
+    const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         if (!editingFabric) return
         setIsUpdating(true)
@@ -166,16 +166,20 @@ export function AdminFabricManager({ initialFabrics = [] }: AdminFabricManagerPr
                 body: JSON.stringify(payload),
             })
 
+            const data = await res.json()
+
             if (res.ok) {
-                const data = await res.json()
                 const updated = data.fabric || { ...editingFabric, ...payload }
                 setFabrics(fabrics.map((f) => (f.id === editingFabric.id ? updated : f)))
                 setEditingFabric(null)
             } else {
-                alert("Failed to update fabric")
+                // Log and display the exact error returned by the server
+                console.error("API Error Response:", data)
+                alert(data.error || data.message || "Failed to update fabric")
             }
         } catch (err) {
             console.error("Update error:", err)
+            alert("A network error occurred.")
         } finally {
             setIsUpdating(false)
         }
