@@ -68,8 +68,8 @@ export async function POST(req: Request) {
                 : [],
         ])
 
-        const fabricMap = new Map(existingFabrics.map((f) => [f.id, f]))
-        const readyMadeMap = new Map(existingReadyMade.map((r) => [r.id, r]))
+        const fabricMap = new Map(existingFabrics.map((f:any) => [f.id, f]))
+        const readyMadeMap = new Map(existingReadyMade.map((r:any) => [r.id, r]))
 
         // 3. Map order items using verified database records
         const orderItemsData = []
@@ -87,16 +87,16 @@ export async function POST(req: Request) {
 
             if ((itemType === "FABRIC" || item.fabricId) && foundFabricId) {
                 fabricId = foundFabricId
-                verifiedPrice = fabricMap.get(foundFabricId)!.price
+                verifiedPrice = (fabricMap.get(foundFabricId) as { price: number })!.price
             } else if ((itemType === "READY_MADE" || item.readyMadeProductId) && foundReadyMadeId) {
                 readyMadeProductId = foundReadyMadeId
-                verifiedPrice = readyMadeMap.get(foundReadyMadeId)!.price
+                verifiedPrice = (readyMadeMap.get(foundReadyMadeId) as { price: number })!.price
             } else if (foundFabricId) {
                 fabricId = foundFabricId
-                verifiedPrice = fabricMap.get(foundFabricId)!.price
+                verifiedPrice = (fabricMap.get(foundFabricId) as { price: number })!.price
             } else if (foundReadyMadeId) {
                 readyMadeProductId = foundReadyMadeId
-                verifiedPrice = readyMadeMap.get(foundReadyMadeId)!.price
+                verifiedPrice = (readyMadeMap.get(foundReadyMadeId) as { price: number })!.price
             }
 
             // Unlinked item fallback check
