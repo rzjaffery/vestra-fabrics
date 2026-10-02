@@ -13,6 +13,9 @@ import {
     Layers,
     Sliders,
 } from "lucide-react"
+import { Suspense } from "react"
+import { useSearchParams } from "next/navigation"
+import YardageCalculatorModal from "@/components/YardageCalculatorModal" // Or your page layout component
 
 // --- ESTIMATION CONFIG & TYPES ---
 type Category = "apparel" | "drapery" | "upholstery"
@@ -97,6 +100,25 @@ const PROJECTS: ProjectOption[] = [
         sizeMultiplier: { Compact: 0.85, Standard: 1.0, Oversized: 1.25 },
     },
 ]
+
+function CalculatorContent() {
+    const searchParams = useSearchParams()
+
+    // Extract parameters from URL
+    const initialCategory = (searchParams.get("category") as any) || "shirt"
+    const fabricName = searchParams.get("fabric") || "Custom Fabric"
+
+    return (
+        <div className="max-w-4xl mx-auto py-12 px-4">
+            <h1 className="text-2xl font-bold mb-4">Yardage Estimator</h1>
+            <p className="text-sm text-muted-foreground mb-8">
+                Estimating for: <strong>{fabricName}</strong> ({initialCategory})
+            </p>
+
+            {/* Render calculator interface pre-populated with initialCategory */}
+        </div>
+    )
+}
 
 export default function CalculatorPage() {
     const [selectedCategory, setSelectedCategory] = useState<Category>("apparel")

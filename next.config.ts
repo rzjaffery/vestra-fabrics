@@ -6,17 +6,14 @@ const nextConfig: NextConfig = {
         remotePatterns: [
             {
                 protocol: "https",
-                hostname: "images.unsplash.com",
+                hostname: "**", // Accepts all HTTPS images across the entire internet
             },
             {
-                protocol: "https",
-                hostname: "images.kaprabazar.com",
-            },
-            {
-                protocol: 'https',
-                hostname: 'plus.unsplash.com',
+                protocol: "http",
+                hostname: "**", // Accepts all HTTP images
             },
         ],
+        unoptimized:true
     },
 };
 

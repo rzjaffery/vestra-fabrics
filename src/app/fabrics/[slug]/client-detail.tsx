@@ -5,8 +5,9 @@ import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { formatPrice } from "@/lib/format-price"
-import { ArrowLeft, Layers, Scissors, ShieldCheck } from "lucide-react"
+import { ArrowLeft, Layers, Ruler, Scissors, ShieldCheck, ExternalLink } from "lucide-react"
 import { AddToCartButton } from "@/components/store/add-to-cart-button"
+import YardageCalculatorModal from "@/components/YardageCalculatorModal" // Ensure path matches your project structure
 
 export function FabricDetailClient({ fabric }: { fabric: any }) {
     const images =
@@ -18,21 +19,42 @@ export function FabricDetailClient({ fabric }: { fabric: any }) {
 
     const [selectedImage, setSelectedImage] = useState(images[0])
     const [meters, setMeters] = useState<number>(2.5) // Default suit length
+    const [isCalculatorOpen, setIsCalculatorOpen] = useState<boolean>(false)
 
     const pricePerMeter = fabric.pricePerMeter ?? fabric.price ?? 0
     const totalPrice = pricePerMeter * meters
     const presetMeters = [1, 2, 2.5, 3, 5]
 
+    // Automatically guess default garment type for the calculator modal
+    const getDefaultCategory = (): "shirt" | "kurta" | "suiting" | "waistcoat" => {
+        const text = `${fabric.name || ""} ${fabric.material || ""}`.toLowerCase()
+        if (text.includes("suit") || text.includes("wool") || text.includes("blazer")) return "suiting"
+        if (text.includes("kurta") || text.includes("wash & wear") || text.includes("slub")) return "kurta"
+        if (text.includes("waistcoat") || text.includes("vest") || text.includes("nehru")) return "waistcoat"
+        return "shirt"
+    }
+
+    const defaultCategory = getDefaultCategory()
+
     return (
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
             {/* Back Link */}
-            <div className="mb-6">
+            <div className="mb-6 flex justify-between items-center">
                 <Link
                     href="/fabrics"
                     className="inline-flex items-center text-xs font-mono text-muted-foreground hover:text-foreground transition-colors"
                 >
                     <ArrowLeft className="mr-2 h-3.5 w-3.5" />
                     Back to Fabric Catalog
+                </Link>
+
+                {/* Optional External Link to Full Standalone Calculator Page */}
+                <Link
+                    href={`/calculator?category=${defaultCategory}&fabric=${encodeURIComponent(fabric.name || "")}`}
+                    className="inline-flex items-center text-xs font-mono text-muted-foreground hover:text-foreground transition-colors gap-1"
+                >
+                    Open Standalone Calculator
+                    <ExternalLink className="h-3 w-3" />
                 </Link>
             </div>
 
@@ -72,16 +94,16 @@ export function FabricDetailClient({ fabric }: { fabric: any }) {
                 <div className="lg:col-span-5 flex flex-col justify-between space-y-8">
                     <div className="space-y-6">
                         <div>
-              <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-                Unstitched Fabric • {fabric.material || "Textile"}
-              </span>
+                            <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                                Unstitched Fabric • {fabric.material || "Textile"}
+                            </span>
                             <h1 className="text-3xl font-light tracking-tight text-foreground mt-1">
                                 {fabric.name}
                             </h1>
                             <div className="mt-3 flex items-baseline gap-2">
-                <span className="text-2xl font-semibold font-mono tracking-tight text-foreground">
-                  {formatPrice(pricePerMeter)}
-                </span>
+                                <span className="text-2xl font-semibold font-mono tracking-tight text-foreground">
+                                    {formatPrice(pricePerMeter)}
+                                </span>
                                 <span className="text-xs text-muted-foreground font-mono">per meter</span>
                             </div>
                         </div>
@@ -91,26 +113,33 @@ export function FabricDetailClient({ fabric }: { fabric: any }) {
                             <div className="flex items-center gap-2">
                                 <Layers className="h-4 w-4 text-muted-foreground" />
                                 <span>
-                  Weight: {fabric.weight || (fabric.weightGsm ? `${fabric.weightGsm} GSM` : "Standard")}
-                </span>
+                                    Weight: {fabric.weight || (fabric.weightGsm ? `${fabric.weightGsm} GSM` : "Standard")}
+                                </span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Scissors className="h-4 w-4 text-muted-foreground" />
                                 <span>
-                  Width: {fabric.width || (fabric.widthInches ? `${fabric.widthInches}"` : "Standard")}
-                </span>
+                                    Width: {fabric.width || (fabric.widthInches ? `${fabric.widthInches}"` : "Standard")}
+                                </span>
                             </div>
                         </div>
 
-                        {/* Meterage Preset Selector */}
+                        {/* Meterage Preset Selector & Calculator Trigger */}
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <label className="text-xs font-mono uppercase tracking-wider font-semibold text-foreground">
-                                    Select Length Preset
+                                    Select Length
                                 </label>
-                                <span className="text-xs font-mono text-muted-foreground">
-                  Stock: {fabric.stock || fabric.inStockMeters || 0}m available
-                </span>
+
+                                {/* MODAL TRIGGER BUTTON */}
+                                <button
+                                    type="button"
+                                    onClick={() => setIsCalculatorOpen(true)}
+                                    className="inline-flex items-center gap-1.5 text-xs font-mono font-medium text-amber-600 hover:text-amber-500 underline underline-offset-4 cursor-pointer"
+                                >
+                                    <Ruler className="h-3.5 w-3.5" />
+                                    Calculate Meterage
+                                </button>
                             </div>
 
                             {/* Quick Preset Buttons */}
@@ -119,7 +148,7 @@ export function FabricDetailClient({ fabric }: { fabric: any }) {
                                     <button
                                         key={m}
                                         onClick={() => setMeters(m)}
-                                        className={`py-2 text-xs font-mono border transition-all ${
+                                        className={`py-2 text-xs font-mono border transition-all rounded ${
                                             meters === m
                                                 ? "bg-primary text-primary-foreground border-primary font-semibold shadow-xs"
                                                 : "bg-card text-foreground border-border hover:border-foreground/60"
@@ -128,6 +157,11 @@ export function FabricDetailClient({ fabric }: { fabric: any }) {
                                         {m}m
                                     </button>
                                 ))}
+                            </div>
+
+                            <div className="flex justify-between items-center text-xs font-mono text-muted-foreground pt-1">
+                                <span>Selected: {meters} Meters</span>
+                                <span>Stock: {fabric.stock || fabric.inStockMeters || 0}m available</span>
                             </div>
                         </div>
 
@@ -144,7 +178,7 @@ export function FabricDetailClient({ fabric }: { fabric: any }) {
                             </p>
                         </div>
 
-                        {/* Add to Cart Component (using key to re-sync when presets change) */}
+                        {/* Add to Cart Component (re-syncs key when meters change) */}
                         <AddToCartButton
                             key={meters}
                             initialQuantity={meters}
@@ -169,6 +203,15 @@ export function FabricDetailClient({ fabric }: { fabric: any }) {
                     </div>
                 </div>
             </div>
+
+            {/* YARDAGE CALCULATOR MODAL */}
+            <YardageCalculatorModal
+                isOpen={isCalculatorOpen}
+                onClose={() => setIsCalculatorOpen(false)}
+                fabricName={fabric.name || "Selected Fabric"}
+                defaultCategory={defaultCategory}
+                onApplyMeters={(calculatedMeters) => setMeters(calculatedMeters)}
+            />
         </div>
     )
 }
