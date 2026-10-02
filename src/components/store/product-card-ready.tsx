@@ -1,4 +1,4 @@
-// components/product-card.tsx
+// components/product-card-fabric.tsx
 import Image from "next/image"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
@@ -27,7 +27,7 @@ interface ProductCardProps {
     product: ProductCardItem
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCardReady({ product }: ProductCardProps) {
     // Normalize fields between Fabric and General Product models
     const displayImage = product.images?.[0] || product.imageUrl || "/placeholder-fabric.jpg"
     const displayPrice = product.pricePerMeter ?? product.price ?? 0
@@ -46,7 +46,7 @@ export function ProductCard({ product }: ProductCardProps) {
             ? `${product.widthInches}"`
             : null
 
-    const href = `/fabrics/${product.slug || product.id}`
+    const href = `/ready-made/${product.slug || product.id}`
 
     return (
         <div className="group relative flex flex-col overflow-hidden border border-border bg-card transition-all duration-300 hover:border-foreground/40 rounded-sm">
