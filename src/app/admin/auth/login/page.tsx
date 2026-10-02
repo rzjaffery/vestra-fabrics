@@ -1,21 +1,22 @@
 "use client"
 
 import React, { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Lock, ArrowRight } from "lucide-react"
 
 export default function AdminLoginPage() {
     const [passcode, setPasscode] = useState("")
     const [error, setError] = useState(false)
-    const router = useRouter()
 
-    const handleLogin = (e: React.SubmitEvent<HTMLFormElement>) => {
+    const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        // Simple demo pin protection (e.g. 1234 or vestra2026)
+
         if (passcode === "1234" || passcode === "admin") {
-            document.cookie = "admin_authenticated=true; path=/"
-            router.push("/admin")
+            // Set cookie with Max-Age (e.g., 1 day) and SameSite policy
+            document.cookie = "admin_authenticated=true; path=/; max-age=86400; SameSite=Lax"
+
+            // Full navigation forces middleware to read the new cookie
+            window.location.href = "/admin"
         } else {
             setError(true)
         }

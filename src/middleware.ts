@@ -7,22 +7,24 @@ export function middleware(req: NextRequest) {
 
     const isAdminRoute = pathname.startsWith("/admin") || pathname.startsWith("/staff")
 
-    // Update this line to include /admin/auth paths
     const isLoginPage =
         pathname.startsWith("/admin/auth") ||
         pathname.startsWith("/staff/auth") ||
         pathname === "/admin/login"
 
-    // Check for auth cookie/token
-    const token = req.cookies.get("admin_token")?.value || req.cookies.get("next-auth.session-token")?.value
+    // Check for 'admin_authenticated' cookie set by your login form
+    const token =
+        req.cookies.get("admin_authenticated")?.value ||
+        req.cookies.get("admin_token")?.value ||
+        req.cookies.get("next-auth.session-token")?.value
 
-    // Redirect unauthenticated users to the correct login path
+    // 1. Redirect unauthenticated users to login
     if (isAdminRoute && !isLoginPage && !token) {
         const loginUrl = new URL("/admin/auth/login", req.url)
         return NextResponse.redirect(loginUrl)
     }
 
-    // Redirect authenticated users away from login pages
+    // 2. Redirect authenticated users away from login page to dashboard
     if (isLoginPage && token) {
         const dashboardUrl = new URL("/admin", req.url)
         return NextResponse.redirect(dashboardUrl)
