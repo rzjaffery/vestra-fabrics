@@ -1,12 +1,38 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
+// Helper to extract clean candidate IDs from cart items
+function getItemCandidateIds(item: any): string[] {
+    const ids: string[] = []
+
+    if (item.fabricId) ids.push(String(item.fabricId))
+    if (item.readyMadeProductId) ids.push(String(item.readyMadeProductId))
+    if (item.productId) ids.push(String(item.productId))
+
+    if (item.id) {
+        const idStr = String(item.id)
+        ids.push(idStr)
+
+        // Handles composite keys like "cm12345-M" or "fabric_cm12345"
+        if (idStr.includes("-")) {
+            ids.push(idStr.split("-")[0])
+        }
+        if (idStr.includes("_")) {
+            ids.push(idStr.split("_")[0])
+            ids.push(idStr.split("_").pop()!)
+        }
+    }
+
+    return Array.from(new Set(ids.filter(Boolean)))
+}
+
 export async function POST(req: Request) {
     try {
         const body = await req.json()
         const {
             customerName,
             customerEmail,
+            email,
             phone,
             address,
             city,
@@ -23,100 +49,99 @@ export async function POST(req: Request) {
             )
         }
 
-        // 1. Collect candidate IDs from cart items
-        const candidateFabricIds = items
-            .map((i: any) => i.fabricId || i.id || i.productId)
-            .filter(Boolean)
+        // 1. Collect all potential DB candidate IDs across all cart items
+        const allCandidateIds = items.flatMap(getItemCandidateIds)
 
-        const candidateReadyMadeIds = items
-            .map((i: any) => i.readyMadeProductId || i.id || i.productId)
-            .filter(Boolean)
-
-        // 2. Query DB to verify existing records
-        const existingFabrics =
-            candidateFabricIds.length > 0
-                ? await prisma.fabric.findMany({
-                    where: { id: { in: candidateFabricIds } },
-                    select: { id: true },
+        // 2. Query DB concurrently for matching records
+        const [existingFabrics, existingReadyMade] = await Promise.all([
+            allCandidateIds.length > 0
+                ? prisma.fabric.findMany({
+                    where: { id: { in: allCandidateIds } },
+                    select: { id: true, price: true, name: true },
                 })
-                : []
-
-        const existingReadyMade =
-            candidateReadyMadeIds.length > 0
-                ? await prisma.readyMadeProduct.findMany({
-                    where: { id: { in: candidateReadyMadeIds } },
-                    select: { id: true },
+                : [],
+            allCandidateIds.length > 0
+                ? prisma.readyMadeProduct.findMany({
+                    where: { id: { in: allCandidateIds } },
+                    select: { id: true, price: true, name: true },
                 })
-                : []
+                : [],
+        ])
 
-        const validFabricIds = new Set(existingFabrics.map((f:any) => f.id))
-        const validReadyMadeIds = new Set(existingReadyMade.map((r:any) => r.id))
+        const fabricMap = new Map(existingFabrics.map((f) => [f.id, f]))
+        const readyMadeMap = new Map(existingReadyMade.map((r) => [r.id, r]))
 
-        // 3. Map order items cleanly based on existing DB IDs
-        const orderItemsData = items.map((item: any) => {
-            const candidateId = item.fabricId || item.readyMadeProductId || item.id || item.productId
+        // 3. Map order items using verified database records
+        const orderItemsData = []
+
+        for (const item of items) {
+            const candidateIds = getItemCandidateIds(item)
+            const itemType = (item.itemType || item.type || "").toUpperCase()
 
             let fabricId: string | null = null
             let readyMadeProductId: string | null = null
+            let verifiedPrice: number = Number(item.price)
 
-            if (validFabricIds.has(candidateId)) {
-                fabricId = candidateId
-            } else if (validReadyMadeIds.has(candidateId)) {
-                readyMadeProductId = candidateId
+            const foundFabricId = candidateIds.find((id) => fabricMap.has(id))
+            const foundReadyMadeId = candidateIds.find((id) => readyMadeMap.has(id))
+
+            if ((itemType === "FABRIC" || item.fabricId) && foundFabricId) {
+                fabricId = foundFabricId
+                verifiedPrice = fabricMap.get(foundFabricId)!.price
+            } else if ((itemType === "READY_MADE" || item.readyMadeProductId) && foundReadyMadeId) {
+                readyMadeProductId = foundReadyMadeId
+                verifiedPrice = readyMadeMap.get(foundReadyMadeId)!.price
+            } else if (foundFabricId) {
+                fabricId = foundFabricId
+                verifiedPrice = fabricMap.get(foundFabricId)!.price
+            } else if (foundReadyMadeId) {
+                readyMadeProductId = foundReadyMadeId
+                verifiedPrice = readyMadeMap.get(foundReadyMadeId)!.price
             }
 
-            const isFabric = Boolean(fabricId) || item.itemType === "FABRIC"
+            // Unlinked item fallback check
+            if (!fabricId && !readyMadeProductId) {
+                console.error("Order creation failed for item:", item, "Candidates tested:", candidateIds)
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error:
+                            "One or more items in your cart no longer exist in the store database. Please clear your cart and re-add the product.",
+                    },
+                    { status: 400 }
+                )
+            }
+
+            const isFabric = Boolean(fabricId)
             const quantity = isFabric
                 ? Number(item.meters || item.quantity || 1)
                 : Number(item.quantity || 1)
 
-            return {
+            orderItemsData.push({
                 fabricId,
                 readyMadeProductId,
                 quantity,
-                price: Number(item.price),
-                selectedSize: item.selectedSize || null,
-            }
-        })
-
-        // Check if any items could not be linked to either table
-        const unlinkedItem = orderItemsData.find(
-            (item) => !item.fabricId && !item.readyMadeProductId
-        )
-
-        if (unlinkedItem) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error:
-                        "One or more items in your cart no longer exist in the store database. Please clear your cart and re-add the product.",
-                },
-                { status: 400 }
-            )
+                price: verifiedPrice,
+                selectedSize: item.selectedSize || item.size || null,
+            })
         }
 
-        // 4. Calculate subtotal and shipping
-        const subtotal = items.reduce((acc: number, item: any) => {
-            const qty = item.meters || item.quantity || 1
-            return acc + item.price * qty
-        }, 0)
-
-        const shippingFee = city?.toLowerCase() === "karachi" ? 250 : 350
+        // 4. Calculate verified subtotal and shipping
+        const subtotal = orderItemsData.reduce((acc, item) => acc + item.price * item.quantity, 0)
+        const shippingFee = city?.trim().toLowerCase() === "karachi" ? 250 : 350
         const totalAmount = subtotal + shippingFee
 
-        // 5. Generate Order Number
+        // 5. Generate Order Metadata
         const orderNumber = `VES-${Math.floor(100000 + Math.random() * 900000)}`
+        const paymentStatus = paymentMethod === "COD" ? "Pending" : "Awaiting Verification"
+        const finalEmail = customerEmail || email || ""
 
-        // 6. Set Payment Status
-        const paymentStatus =
-            paymentMethod === "COD" ? "Pending" : "Awaiting Verification"
-
-        // 7. Create Order in Prisma
+        // 6. Create Order in Database
         const order = await prisma.order.create({
             data: {
                 orderNumber,
                 customerName,
-                customerEmail,
+                customerEmail: finalEmail,
                 phone,
                 address,
                 city,
