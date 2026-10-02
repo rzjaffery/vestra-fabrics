@@ -4,7 +4,8 @@ import { ProductCardFabric } from "@/components/store/product-card-fabric"
 export const revalidate = 0
 
 export default async function ShopPage() {
-    const products = await prisma.product.findMany({
+    // Query the fabric model instead of product
+    const fabrics = await prisma.fabric.findMany({
         orderBy: {
             createdAt: "desc",
         },
@@ -15,9 +16,9 @@ export default async function ShopPage() {
             {/* Editorial Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 border-b border-border pb-8">
                 <div>
-          <span className="text-xs uppercase tracking-widest text-muted-foreground font-mono">
-            Vestra Fabric Archive
-          </span>
+                    <span className="text-xs uppercase tracking-widest text-muted-foreground font-mono">
+                        Vestra Fabric Archive
+                    </span>
                     <h1 className="text-3xl md:text-5xl font-light tracking-tight mt-2">
                         The Textile Collection
                     </h1>
@@ -29,19 +30,19 @@ export default async function ShopPage() {
 
             {/* Catalog Meta */}
             <div className="flex justify-between items-center mb-6 text-xs text-muted-foreground font-mono uppercase tracking-wider">
-                <span>Showing {products.length} Materials</span>
+                <span>Showing {fabrics.length} Materials</span>
                 <span>Filter: All Categories</span>
             </div>
 
             {/* Multi-Column Responsive Grid */}
-            {products.length === 0 ? (
+            {fabrics.length === 0 ? (
                 <div className="text-center py-24 border border-dashed text-muted-foreground">
                     No fabrics currently in stock.
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {products.map((product: { id: string; name: string; slug: string; description: string; price: number; images: string[]; material: string; weight: string; width: string; stock: number; featured: boolean; createdAt: Date; updatedAt: Date }) => (
-                        <ProductCardFabric key={product.id} product={product} />
+                    {fabrics.map((fabric: any) => (
+                        <ProductCardFabric key={fabric.id} product={fabric} />
                     ))}
                 </div>
             )}
