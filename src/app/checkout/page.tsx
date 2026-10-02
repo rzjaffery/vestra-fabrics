@@ -6,11 +6,13 @@ import Image from "next/image"
 import { useCartStore } from "@/lib/store/use-cart-store"
 import { Button } from "@/components/ui/button"
 import { Truck, Landmark, CreditCard, CheckCircle, Loader2 } from "lucide-react"
-import {formatPrice} from "@/lib/format-price";
+import { formatPrice } from "@/lib/format-price"
 
 export default function CheckoutPage() {
     const router = useRouter()
-    const { items, getTotalPrice } = useCartStore()
+    const items = useCartStore((state) => state.items)
+    const clearCart = useCartStore((state) => state.clearCart)
+
     const [isMounted, setIsMounted] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
 
@@ -38,18 +40,30 @@ export default function CheckoutPage() {
                 <p className="text-sm text-muted-foreground mt-2 mb-6">
                     Add some fabrics to your swatch bag before proceeding to checkout.
                 </p>
-                <Button onClick={() => router.push("/shop")} className="rounded-none text-xs uppercase tracking-widest">
+                <Button
+                    onClick={() => router.push("/fabrics")}
+                    className="rounded-none text-xs uppercase tracking-widest"
+                >
                     Return to Shop
                 </Button>
             </div>
         )
     }
 
-    const subtotal = getTotalPrice()
-    const shippingFee = formData.city.toLowerCase() === "karachi" ? 250 : 350 // Delivery rate in PKR
+    // Calculate subtotal directly from cart items
+    const subtotal = items.reduce((total, item) => {
+        const qty = item.meters || item.quantity || 1
+        return total + item.price * qty
+    }, 0)
+
+    const shippingFee = formData.city.toLowerCase() === "karachi" ? 250 : 350
     const total = subtotal + shippingFee
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const handleChange = (
+        e: React.ChangeEvent<
+            HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+        >
+    ) => {
         setFormData({ ...formData, [e.target.name]: e.target.value })
     }
 
@@ -64,13 +78,19 @@ export default function CheckoutPage() {
                 body: JSON.stringify({
                     ...formData,
                     items,
+                    subtotal,
+                    shippingFee,
+                    total,
                 }),
             })
 
             const data = await response.json()
 
             if (data.success) {
-                router.push(`/checkout/success?orderNumber=${data.orderNumber}&method=${formData.paymentMethod}`)
+                clearCart()
+                router.push(
+                    `/checkout/success?orderNumber=${data.orderNumber}&method=${formData.paymentMethod}`
+                )
             } else {
                 alert(data.error || "Failed to place order. Please try again.")
             }
@@ -88,17 +108,22 @@ export default function CheckoutPage() {
                 Checkout & Delivery
             </h1>
 
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            <form
+                onSubmit={handleSubmit}
+                className="grid grid-cols-1 lg:grid-cols-12 gap-12"
+            >
                 {/* Left Column: Shipping & Payment Info */}
                 <div className="lg:col-span-7 space-y-8">
-                    {/* Shipping Address */}
+                    {/* Delivery Information */}
                     <div className="space-y-4">
                         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground font-mono">
                             1. Delivery Information
                         </h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="text-xs font-medium text-muted-foreground block mb-1">Full Name *</label>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">
+                                    Full Name *
+                                </label>
                                 <input
                                     type="text"
                                     name="customerName"
@@ -111,7 +136,9 @@ export default function CheckoutPage() {
                             </div>
 
                             <div>
-                                <label className="text-xs font-medium text-muted-foreground block mb-1">Phone Number (Required for Courier) *</label>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">
+                                    Phone Number (Required for Courier) *
+                                </label>
                                 <input
                                     type="tel"
                                     name="phone"
@@ -125,7 +152,9 @@ export default function CheckoutPage() {
                         </div>
 
                         <div>
-                            <label className="text-xs font-medium text-muted-foreground block mb-1">Email Address *</label>
+                            <label className="text-xs font-medium text-muted-foreground block mb-1">
+                                Email Address *
+                            </label>
                             <input
                                 type="email"
                                 name="customerEmail"
@@ -138,7 +167,9 @@ export default function CheckoutPage() {
                         </div>
 
                         <div>
-                            <label className="text-xs font-medium text-muted-foreground block mb-1">Street Address *</label>
+                            <label className="text-xs font-medium text-muted-foreground block mb-1">
+                                Street Address *
+                            </label>
                             <input
                                 type="text"
                                 name="address"
@@ -152,7 +183,9 @@ export default function CheckoutPage() {
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="text-xs font-medium text-muted-foreground block mb-1">City *</label>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">
+                                    City *
+                                </label>
                                 <select
                                     name="city"
                                     value={formData.city}
@@ -166,12 +199,13 @@ export default function CheckoutPage() {
                                     <option value="Faisalabad">Faisalabad</option>
                                     <option value="Peshawar">Peshawar</option>
                                     <option value="Quetta">Quetta</option>
-
                                 </select>
                             </div>
 
                             <div>
-                                <label className="text-xs font-medium text-muted-foreground block mb-1">Postal Code (Optional)</label>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">
+                                    Postal Code (Optional)
+                                </label>
                                 <input
                                     type="text"
                                     name="postalCode"
@@ -194,7 +228,9 @@ export default function CheckoutPage() {
                             {/* COD Option */}
                             <label
                                 className={`flex items-start gap-4 p-4 border cursor-pointer transition-colors ${
-                                    formData.paymentMethod === "COD" ? "border-foreground bg-muted/30" : "border-border"
+                                    formData.paymentMethod === "COD"
+                                        ? "border-foreground bg-muted/30"
+                                        : "border-border"
                                 }`}
                             >
                                 <input
@@ -218,7 +254,9 @@ export default function CheckoutPage() {
                             {/* Direct Bank Transfer Option */}
                             <label
                                 className={`flex items-start gap-4 p-4 border cursor-pointer transition-colors ${
-                                    formData.paymentMethod === "BANK_TRANSFER" ? "border-foreground bg-muted/30" : "border-border"
+                                    formData.paymentMethod === "BANK_TRANSFER"
+                                        ? "border-foreground bg-muted/30"
+                                        : "border-border"
                                 }`}
                             >
                                 <input
@@ -239,10 +277,12 @@ export default function CheckoutPage() {
                                 </div>
                             </label>
 
-                            {/* Online Gateway Option (Safepay / PayFast) */}
+                            {/* Online Gateway Option */}
                             <label
                                 className={`flex items-start gap-4 p-4 border cursor-pointer transition-colors ${
-                                    formData.paymentMethod === "ONLINE_PAYMENT" ? "border-foreground bg-muted/30" : "border-border"
+                                    formData.paymentMethod === "ONLINE_PAYMENT"
+                                        ? "border-foreground bg-muted/30"
+                                        : "border-border"
                                 }`}
                             >
                                 <input
@@ -270,7 +310,11 @@ export default function CheckoutPage() {
                         disabled={isLoading}
                         className="w-full h-14 rounded-none uppercase text-xs tracking-widest bg-foreground text-background hover:bg-foreground/90 flex items-center justify-center gap-2"
                     >
-                        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                        {isLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                            <CheckCircle className="h-4 w-4" />
+                        )}
                         {isLoading ? "Processing Order..." : "Confirm & Place Order"}
                     </Button>
                 </div>
@@ -282,34 +326,47 @@ export default function CheckoutPage() {
                     </h2>
 
                     <div className="space-y-4 max-h-80 overflow-y-auto divide-y divide-border/50">
-                        {items.map(({ product, quantity }) => (
-                            <div key={product.id} className="flex gap-4 pt-3 first:pt-0">
-                                <div className="relative h-16 w-16 bg-muted border overflow-hidden flex-shrink-0">
-                                    <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
+                        {items.map((item) => {
+                            const qty = item.meters || item.quantity || 1
+                            const itemTotal = item.price * qty
+
+                            return (
+                                <div key={item.id} className="flex gap-4 pt-3 first:pt-0">
+                                    <div className="relative h-16 w-16 bg-muted border overflow-hidden flex-shrink-0">
+                                        <Image
+                                            src={item.image || "/placeholder-fabric.jpg"}
+                                            alt={item.name}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    </div>
+                                    <div className="flex-1 text-xs">
+                                        <h4 className="font-medium text-sm">{item.name}</h4>
+                                        <p className="text-muted-foreground">
+                                            {item.itemType === "FABRIC"
+                                                ? `${qty} meters`
+                                                : `Qty: ${qty}`}
+                                            {item.selectedSize ? ` • Size: ${item.selectedSize}` : ""}
+                                        </p>
+                                        <p className="font-mono mt-1">{formatPrice(itemTotal)}</p>
+                                    </div>
                                 </div>
-                                <div className="flex-1 text-xs">
-                                    <h4 className="font-medium text-sm">{product.name}</h4>
-                                    <p className="text-muted-foreground">{quantity} meters</p>
-                                    <p className="font-mono mt-1">{formatPrice(product.price * quantity)}</p>
-                                </div>
-                            </div>
-                        ))}
+                            )
+                        })}
                     </div>
 
                     <div className="border-t border-border pt-4 space-y-2 text-sm">
-                        <div className="border-t border-border pt-4 space-y-2 text-sm">
-                            <div className="flex justify-between text-muted-foreground text-xs">
-                                <span>Items Total</span>
-                                <span>{formatPrice(subtotal)}</span>
-                            </div>
-                            <div className="flex justify-between text-muted-foreground text-xs">
-                                <span>Standard Courier Delivery</span>
-                                <span>{formatPrice(shippingFee)}</span>
-                            </div>
-                            <div className="flex justify-between font-semibold text-base border-t pt-3 mt-2">
-                                <span>Total Payable</span>
-                                <span>{formatPrice(total)}</span>
-                            </div>
+                        <div className="flex justify-between text-muted-foreground text-xs">
+                            <span>Items Total</span>
+                            <span>{formatPrice(subtotal)}</span>
+                        </div>
+                        <div className="flex justify-between text-muted-foreground text-xs">
+                            <span>Standard Courier Delivery</span>
+                            <span>{formatPrice(shippingFee)}</span>
+                        </div>
+                        <div className="flex justify-between font-semibold text-base border-t pt-3 mt-2">
+                            <span>Total Payable</span>
+                            <span>{formatPrice(total)}</span>
                         </div>
                     </div>
                 </div>
