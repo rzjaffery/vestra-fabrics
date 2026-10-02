@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Lock, ArrowRight } from "lucide-react"
@@ -10,7 +10,7 @@ export default function AdminLoginPage() {
     const [error, setError] = useState(false)
     const router = useRouter()
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault()
         // Simple demo pin protection (e.g. 1234 or vestra2026)
         if (passcode === "1234" || passcode === "admin") {

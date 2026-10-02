@@ -16,7 +16,7 @@ export function Footer() {
                     <Link href="/track-order" className="hover:text-foreground transition-colors">
                         Order Tracker
                     </Link>
-                    <Link href="/admin/login" className="hover:text-foreground transition-colors text-[10px] uppercase">
+                    <Link href="/admin/auth/login" className="hover:text-foreground transition-colors text-[10px] uppercase">
                         Staff Portal
                     </Link>
                 </div>

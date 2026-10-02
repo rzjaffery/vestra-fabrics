@@ -1,4 +1,3 @@
-// app/admin/page.tsx
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { formatPrice } from "@/lib/format-price"
@@ -14,30 +13,41 @@ import {
 export const revalidate = 0
 
 export default async function AdminDashboardOverview() {
-    // Fetch orders and fabrics concurrently
-    const [orders, fabrics, readyMadeProducts] = await Promise.all([
-        prisma.order.findMany({
-            take: 5,
-            orderBy: { createdAt: "desc" },
-        }),
-        prisma.fabric.findMany({
-            orderBy: { stock: "asc" },
-        }),
-        prisma.readyMadeProduct.findMany({
-            take: 5,
-        }),
-    ])
+    let orders: any[] = []
+    let fabrics: any[] = []
+    let readyMadeProducts: any[] = []
 
-    const totalRevenue = orders.reduce((sum: any, order: { totalAmount: any }) => sum + order.totalAmount, 0)
-    const pendingOrders = orders.filter((o:any) => o.status === "PENDING").length
-    const lowStockFabrics = fabrics.filter((f:any) => f.stock < 50)
+    try {
+        const [fetchedOrders, fetchedFabrics, fetchedReadyMade] = await Promise.all([
+            prisma.order.findMany({
+                take: 5,
+                orderBy: { createdAt: "desc" },
+            }),
+            prisma.fabric.findMany({
+                orderBy: { stock: "asc" },
+            }),
+            prisma.readyMadeProduct.findMany({
+                take: 5,
+            }),
+        ])
+
+        orders = fetchedOrders
+        fabrics = fetchedFabrics
+        readyMadeProducts = fetchedReadyMade
+    } catch (error) {
+        console.error("Dashboard database fetch error:", error)
+    }
+
+    const totalRevenue = orders.reduce((sum: number, order: any) => sum + (order.totalAmount || 0), 0)
+    const pendingOrders = orders.filter((o: any) => o.status === "PENDING").length
+    const lowStockFabrics = fabrics.filter((f: any) => f.stock < 50)
 
     return (
         <div className="space-y-8">
             <div>
-        <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
-          Analytics & Status
-        </span>
+                <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                    Analytics & Status
+                </span>
                 <h1 className="text-3xl font-light tracking-tight text-foreground mt-1">
                     Store Operations Overview
                 </h1>
@@ -101,7 +111,7 @@ export default async function AdminDashboardOverview() {
                         {orders.length === 0 ? (
                             <p className="text-xs text-muted-foreground py-4">No recent orders found.</p>
                         ) : (
-                            orders.map((order:any) => (
+                            orders.map((order: any) => (
                                 <div key={order.id} className="py-3 flex items-center justify-between text-xs">
                                     <div>
                                         <p className="font-mono font-semibold">{order.orderNumber}</p>
@@ -112,8 +122,8 @@ export default async function AdminDashboardOverview() {
                                     <div className="text-right">
                                         <p className="font-mono font-semibold">{formatPrice(order.totalAmount)}</p>
                                         <span className="text-[10px] font-mono uppercase text-muted-foreground">
-                      {order.paymentMethod} ({order.status})
-                    </span>
+                                            {order.paymentMethod} ({order.status})
+                                        </span>
                                     </div>
                                 </div>
                             ))
@@ -138,20 +148,20 @@ export default async function AdminDashboardOverview() {
                         {fabrics.length === 0 ? (
                             <p className="text-xs text-muted-foreground py-4">No fabric inventory found.</p>
                         ) : (
-                            fabrics.slice(0, 5).map((fabric:any) => (
+                            fabrics.slice(0, 5).map((fabric: any) => (
                                 <div key={fabric.id} className="py-3 flex items-center justify-between text-xs">
                                     <div>
                                         <p className="font-medium">{fabric.name}</p>
                                         <p className="text-muted-foreground">{fabric.material}</p>
                                     </div>
                                     <div className="text-right">
-                    <span
-                        className={`font-mono font-semibold ${
-                            fabric.stock < 50 ? "text-destructive" : "text-emerald-600"
-                        }`}
-                    >
-                      {fabric.stock}m remaining
-                    </span>
+                                        <span
+                                            className={`font-mono font-semibold ${
+                                                fabric.stock < 50 ? "text-destructive" : "text-emerald-600"
+                                            }`}
+                                        >
+                                            {fabric.stock}m remaining
+                                        </span>
                                     </div>
                                 </div>
                             ))
